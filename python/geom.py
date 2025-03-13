@@ -894,8 +894,8 @@ class BathLorentzianSusceptibility(LorentzianSusceptibility):
                 self.bath_gammas = [self.gamma] * num_bath
             bath_frequencies = np.linspace(-bath_width/2.0, bath_width/2.0, num_bath)
             rho_omega = 1.0 / (bath_frequencies[1] - bath_frequencies[0])
-            # The final 2pi factor is used because 2pi is not used within MEEP C++ for converting k
-            k = (2.0 / np.pi / rho_omega * bath_dephasing)**0.5 * 2.0 * np.pi 
+            # this k value corresponds to a uniform distribution of the bath oscillators
+            k = (2.0 / np.pi / rho_omega * bath_dephasing)**0.5
             if bath_form == "uniform":
                 bath_couplings = [k] * num_bath
             elif bath_form == "lorentzian":

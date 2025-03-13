@@ -446,11 +446,12 @@ void bath_lorentzian_susceptibility::update_P(realnum *W[NUM_FIELD_COMPONENTS][2
   //typedef std::chrono::high_resolution_clock Clock;
   //std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
-  std::vector<realnum> bathfreq2pi, bathgamma2pi;
+  std::vector<realnum> bathfreq2pi, bathgamma2pi, bath_couplings2pi;
   for (int i = 0; i < num_bath; i++)
   {
     bathfreq2pi.push_back(bath_frequencies[i] * 2 * pi);
     bathgamma2pi.push_back(bath_gammas[i] * 2 * pi);
+    bath_couplings2pi.push_back(bath_couplings[i] * 2 * pi);
   }
   // second let's calculate ai, bi, and ci
   //std::vector<realnum> coeff_a, coeff_b, coeff_c, coeff_ak, coeff_bk;
@@ -460,28 +461,28 @@ void bath_lorentzian_susceptibility::update_P(realnum *W[NUM_FIELD_COMPONENTS][2
     realnum denom = 1.0 + bathgamma2pi[i] * dt / 2.0;
     realnum ai = (2.0 - bathfreq2pi[i] * bathfreq2pi[i] * dt * dt) / denom;
     realnum bi = -2.0 / denom;
-    realnum ci = bath_couplings[i] * dt / 2.0 / denom;
+    realnum ci = bath_couplings2pi[i] * dt / 2.0 / denom;
     //coeff_a.push_back(ai);
     //coeff_b.push_back(bi);
     //coeff_c.push_back(ci);
-    //coeff_ak.push_back(ai * bath_couplings[i]);
-    //coeff_bk.push_back(bi * bath_couplings[i]);
+    //coeff_ak.push_back(ai * bath_couplings2pi[i]);
+    //coeff_bk.push_back(bi * bath_couplings2pi[i]);
 
     coeff_a[i] = ai;
     coeff_b[i] = bi;
     coeff_c[i] = ci;
-    coeff_ak[i] = dt / 2.0 * ai * bath_couplings[i];
-    coeff_bk[i] = dt / 2.0 * bi * bath_couplings[i];
+    coeff_ak[i] = dt / 2.0 * ai * bath_couplings2pi[i];
+    coeff_bk[i] = dt / 2.0 * bi * bath_couplings2pi[i];
     coeff_bplusone[i] = bi + 1.0;
   }
-  //realnum ap = 1.0 + dt / 2.0 * std::inner_product(bath_couplings.begin(), bath_couplings.end(), coeff_c.begin(), 0.0);
-  //realnum prefactor_pnminus = 1.0 - dt / 2.0 * std::inner_product(bath_couplings.begin(), bath_couplings.end(), coeff_c.begin(), 0.0);
+  //realnum ap = 1.0 + dt / 2.0 * std::inner_product(bath_couplings2pi.begin(), bath_couplings2pi.end(), coeff_c.begin(), 0.0);
+  //realnum prefactor_pnminus = 1.0 - dt / 2.0 * std::inner_product(bath_couplings2pi.begin(), bath_couplings2pi.end(), coeff_c.begin(), 0.0);
 
   realnum ap = 1.0 + g2pi * dt / 2, prefactor_pnminus = 1.0 - g2pi * dt / 2;
   for (int i = 0; i < num_bath; i++)
   {
-    ap += dt / 2.0 * bath_couplings[i] * coeff_c[i];
-    prefactor_pnminus -= dt / 2.0 * bath_couplings[i] * coeff_c[i];
+    ap += dt / 2.0 * bath_couplings2pi[i] * coeff_c[i];
+    prefactor_pnminus -= dt / 2.0 * bath_couplings2pi[i] * coeff_c[i];
   }
   realnum apinv = 1.0 / ap;
 
