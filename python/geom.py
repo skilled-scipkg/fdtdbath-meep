@@ -853,7 +853,9 @@ class BathLorentzianSusceptibility(LorentzianSusceptibility):
     used in usual Lorentzian susceptibility. 
     """
     def __init__(self, num_bath=0, bath_width=None, bath_form=None, bath_dephasing=None,
-                 bath_frequencies=None, bath_couplings=None, bath_gammas=None, noise_amp=0.0, **kwargs):
+                 bath_frequencies=None, bath_couplings=None, bath_gammas=None, 
+                 bath_anharmonicities=None,
+                 noise_amp=0.0, **kwargs):
         """
         num_bath: number of bath oscillators along each dimension in each spatial grid point.
         When num_bath = 0, this class is reduced to **LorentzianSusceptibility**.
@@ -886,6 +888,7 @@ class BathLorentzianSusceptibility(LorentzianSusceptibility):
         self.bath_frequencies = bath_frequencies.copy() if bath_frequencies is not None else []
         self.bath_couplings = bath_couplings.copy() if bath_couplings is not None else []
         self.bath_gammas = bath_gammas.copy() if bath_gammas is not None else []
+        self.bath_anharmonicities = bath_anharmonicities.copy() if bath_anharmonicities is not None else [0.0]*num_bath
         self.noise_amp = noise_amp
 
         # then try to apply the indirect definition
@@ -896,18 +899,118 @@ class BathLorentzianSusceptibility(LorentzianSusceptibility):
             rho_omega = 1.0 / (bath_frequencies[1] - bath_frequencies[0])
             # this k value corresponds to a uniform distribution of the bath oscillators
             k = (2.0 / np.pi / rho_omega * bath_dephasing)**0.5
+            self.k = k
             if bath_form == "uniform":
                 bath_couplings = [k] * num_bath
             elif bath_form == "lorentzian":
                 # the 1.5 prefactor accounts for the poles from the Lorentz function
                 bath_linewidth = bath_dephasing + self.gamma
                 renormalization_factor = (2.0 * bath_linewidth + self.bath_gammas[0]) / bath_linewidth / 2.0
-                print("renormalization_factor = ", renormalization_factor)
+                # print("renormalization_factor = ", renormalization_factor)
                 bath_couplings =  (k * (renormalization_factor * bath_linewidth**2 / (bath_linewidth**2 + (bath_frequencies)**2) )**(0.5)).tolist()
             else:
                 raise RuntimeError("bath_form is ill definited, only uniform and lorentzian are supported!")
             self.bath_frequencies = (bath_frequencies + self.frequency).tolist()
             self.bath_couplings = bath_couplings
+
+    def obtain_independent_lorentzians(self):
+        """
+        Convert the coupled (bright + bath) oscillators to a set of independent (decoupled)
+        Lorentzian oscillators. We construct a state-space matrix A of dimension 2*(num_bath+1)
+        that represents the first-order form of the second-order differential equations:
+        
+          For the bright mode:
+            Ṗ = P_dot
+            P̈ = -ω₀² P - γ₀ P_dot - Σ_j k_j (Y_j)_dot
+            
+          For each bath oscillator j:
+            Y_j̇ = (Y_j)_dot
+            (Y_j)̈ = -ω_j² Y_j - γ_j (Y_j)_dot + k_j P_dot
+
+        The state vector is defined as:
+          x = [P, P_dot, Y₁, (Y₁)_dot, ..., Y_N, (Y_N)_dot]^T.
+        
+        The eigenvalues λ of A satisfy x(t) ~ e^(λt). For a damped oscillator, we expect:
+        
+          λ = -γ_eff/2 - i ω_eff   so that, defining ω = iλ, we have
+          ω = ω_eff - i (γ_eff/2).
+        
+        The oscillator strength is given by the squared modulus of the bright-component 
+        (first component) of the corresponding eigenvector.
+        
+        Returns:
+          A list of dictionaries, each with keys:
+            'frequency': resonance frequency (ω_eff)
+            'gamma': full decay rate (γ_eff)
+            'sigma': oscillator strength (bright weight)
+        """
+
+        # the current formalism supports only when the Lorentzian oscillator and the bath oscillators 
+        # have the same decay rate. The independent lorentzians are also a harmonic approximation
+        if self.gamma != self.bath_gammas[0] or len(set(self.bath_gammas)) != 1:
+            raise RuntimeError('''Converting the Lorentz-Bath oscillators to independent Lorentzians 
+                               is CURRENTLY only supported when all oscillators have the same decay rate !
+                               (Forgiving me that the full implementation is tedious)''')
+
+        N = self.num_bath  # number of bath oscillators
+        dim = 2 * (N + 1)  # state vector dimension
+        
+        # Initialize the state-space matrix A (2*(N+1) x 2*(N+1))
+        A = np.zeros((dim, dim), dtype=np.complex128)
+        
+        # Bright mode occupies indices 0 and 1:
+        # x[0] = P, x[1] = P_dot.
+        # Equation: dP/dt = P_dot
+        A[0, 1] = 1.0
+        
+        # Equation: d(P_dot)/dt = -ω₀² P - γ₀ P_dot - Σ_{j=1}^{N} k_j (Y_j)_dot.
+        A[1, 0] = -self.frequency**2
+        A[1, 1] = -self.gamma
+        # For each bath oscillator j, (Y_j)_dot is at index: 2*(j+1)+1.
+        for j in range(N):
+            bath_vel_index = 2*(j+1) + 1
+            A[1, bath_vel_index] = -self.bath_couplings[j]
+        
+        # For each bath oscillator j, indices: position = 2*(j+1), velocity = 2*(j+1)+1.
+        for j in range(N):
+            pos_idx = 2*(j+1)
+            vel_idx = pos_idx + 1
+            # Equation: d(Y_j)/dt = (Y_j)_dot
+            A[pos_idx, vel_idx] = 1.0
+            # Equation: d((Y_j)_dot)/dt = -ω_j² Y_j - γ_j (Y_j)_dot + k_j P_dot.
+            A[vel_idx, pos_idx] = -self.bath_frequencies[j]**2
+            A[vel_idx, vel_idx] = -self.bath_gammas[j]
+            # Coupling from P_dot (which is at index 1)
+            A[vel_idx, 1] += self.bath_couplings[j]
+        
+        # Now compute eigenvalues and eigenvectors of A.
+        eigvals, eigvecs = np.linalg.eig(A)
+        # Convert eigenvalues λ to eigenfrequencies ω via ω = i λ.
+        omega_eigs = 1j * eigvals
+        # Each eigenfrequency should be of the form: ω = ω_eff - i (γ_eff/2).
+        # So we extract:
+        #   Resonance frequency: ω_eff = Re(ω)
+        #   Full decay rate: γ_eff = -2 * Im(ω)
+        
+        # Filter to keep only modes with positive resonance frequencies
+        positive_indices = np.where(np.real(omega_eigs) > 0)[0]
+        omega_eigs_pos = omega_eigs[positive_indices]
+        eigvecs_pos = eigvecs[:, positive_indices]
+
+        # Now, assume the number of positive eigenvalues is N+1.
+        independent_oscillators = []
+        for i in range(len(omega_eigs_pos)):
+            omega_i = omega_eigs_pos[i]
+            freq = np.real(omega_i)
+            gamma_eff = -2.0 * np.imag(omega_i)  # since ω = ω_eff - i(γ_eff/2)
+            sigma_weight = np.abs(eigvecs_pos[0, i])**2.0 * (self.frequency / freq)**2.0 * 2.0 # oscillator strength from the bright-mode component
+            mode = {"frequency": freq, "gamma": gamma_eff, "sigma_weight": sigma_weight}
+            independent_oscillators.append(mode)
+        print("The Lorentz-Bath model is converted to sum-of-Lorentzians, independent simple Lorentzian functions:")
+        for mode in independent_oscillators:
+            print(mode)
+        print(len(independent_oscillators), " independent Lorentzian modes are included in the simulations")
+        return independent_oscillators
 
 class NoisyDrudeSusceptibility(DrudeSusceptibility):
     """

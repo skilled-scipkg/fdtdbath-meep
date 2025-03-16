@@ -1848,7 +1848,7 @@ void geom_epsilon::add_susceptibilities(meep::field_type ft, meep::structure *s)
       if (bath_lorentzian) {
         sus = new meep::bath_lorentzian_susceptibility(ss->frequency, ss->gamma,
           ss->num_bath, ss->bath_frequencies, ss->bath_couplings, 
-          ss->bath_gammas, ss->noise_amp, ss->drude);
+          ss->bath_gammas, ss->bath_anharmonicities, ss->noise_amp, ss->drude);
       }
       else if (noisy) {
         sus = new meep::noisy_lorentzian_susceptibility(ss->noise_amp, ss->frequency, ss->gamma,

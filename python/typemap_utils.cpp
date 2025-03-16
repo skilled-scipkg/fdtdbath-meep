@@ -411,6 +411,7 @@ static int py_susceptibility_to_susceptibility(PyObject *po, susceptibility_stru
   s->bath_frequencies.resize(0);
   s->bath_couplings.resize(0);
   s->bath_gammas.resize(0);
+  s->bath_anharmonicities.resize(0);
   s->bias.x = s->bias.y = s->bias.z = 0;
   s->saturated_gyrotropy = false;
   s->transitions.resize(0);
@@ -466,6 +467,18 @@ static int py_susceptibility_to_susceptibility(PyObject *po, susceptibility_stru
       s->bath_gammas[i] = PyFloat_AsDouble(PyList_GetItem(py_bath_gammas, i));
     }
     Py_DECREF(py_bath_gammas);
+  }
+
+  // Get bath_anharmoncities if present
+  if (PyObject_HasAttrString(po, "bath_anharmonicities")){
+    PyObject *py_bath_anharmonicities = PyObject_GetAttrString(po, "bath_anharmonicities");
+    if (!py_bath_anharmonicities) { return 0; }
+    int len_bg = PyList_Size(py_bath_anharmonicities);
+    s->bath_anharmonicities.resize(len_bg);
+    for (int i = 0; i < len_bg; ++i) {
+      s->bath_anharmonicities[i] = PyFloat_AsDouble(PyList_GetItem(py_bath_anharmonicities, i));
+    }
+    Py_DECREF(py_bath_anharmonicities);
   }
 
   if (PyObject_HasAttrString(po, "bias")) {
@@ -724,6 +737,13 @@ static PyObject *susceptibility_to_py_obj(const susceptibility_struct *s) {
     }
     PyObject_SetAttrString(res, "bath_gammas", py_bath_gammas);
     Py_DECREF(py_bath_gammas);
+
+    PyObject *py_bath_anharmonicities = PyList_New(s->bath_anharmonicities.size());
+    for (size_t i = 0; i < s->bath_anharmonicities.size(); ++i) {
+      PyList_SET_ITEM(py_bath_anharmonicities, i, PyFloat_FromDouble(s->bath_anharmonicities[i]));
+    }
+    PyObject_SetAttrString(res, "bath_anharmonicities", py_bath_anharmonicities);
+    Py_DECREF(py_bath_anharmonicities);
 
     PyObject *py_noise = PyFloat_FromDouble(s->noise_amp);
     PyObject_SetAttrString(res, "noise_amp", py_noise);

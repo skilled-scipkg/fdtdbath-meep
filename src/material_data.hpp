@@ -65,6 +65,7 @@ typedef struct susceptibility_struct {
   std::vector<double> bath_frequencies;
   std::vector<double> bath_couplings;
   std::vector<double> bath_gammas;
+  std::vector<double> bath_anharmonicities;
 } susceptibility;
 
 using susceptibility_list = std::vector<susceptibility>;
