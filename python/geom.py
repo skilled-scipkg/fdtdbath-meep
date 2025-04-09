@@ -947,7 +947,7 @@ class BathLorentzianSusceptibility(LorentzianSusceptibility):
 
         # the current formalism supports only when the Lorentzian oscillator and the bath oscillators 
         # have the same decay rate. The independent lorentzians are also a harmonic approximation
-        if self.gamma != self.bath_gammas[0] or len(set(self.bath_gammas)) != 1:
+        if abs(self.gamma - self.bath_gammas[0]) > 1e-12 or len(set(self.bath_gammas)) != 1:
             raise RuntimeError('''Converting the Lorentz-Bath oscillators to independent Lorentzians 
                                is CURRENTLY only supported when all oscillators have the same decay rate !
                                (Forgiving me that the full implementation is tedious)''')
@@ -1006,6 +1006,8 @@ class BathLorentzianSusceptibility(LorentzianSusceptibility):
             sigma_weight = np.abs(eigvecs_pos[0, i])**2.0 * (self.frequency / freq)**2.0 * 2.0 # oscillator strength from the bright-mode component
             mode = {"frequency": freq, "gamma": gamma_eff, "sigma_weight": sigma_weight}
             independent_oscillators.append(mode)
+        # rank the independent oscillators by their frequencies
+        independent_oscillators.sort(key=lambda x: x["frequency"])
         print("The Lorentz-Bath model is converted to sum-of-Lorentzians, independent simple Lorentzian functions:")
         for mode in independent_oscillators:
             print(mode)
