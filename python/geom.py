@@ -903,13 +903,16 @@ class BathLorentzianSusceptibility(LorentzianSusceptibility):
             if bath_form == "uniform":
                 bath_couplings = [k] * num_bath
             elif bath_form == "lorentzian":
-                # the 1.5 prefactor accounts for the poles from the Lorentz function
                 bath_linewidth = bath_dephasing + self.gamma
                 renormalization_factor = (2.0 * bath_linewidth + self.bath_gammas[0]) / bath_linewidth / 2.0
-                # print("renormalization_factor = ", renormalization_factor)
-                bath_couplings =  (k * (renormalization_factor * bath_linewidth**2 / (bath_linewidth**2 + (bath_frequencies)**2) )**(0.5)).tolist()
+                # renormalization_factor = 1.0 # an empirical factor 
+                bath_couplings =  (k * (renormalization_factor * (bath_linewidth)**2 / ((bath_linewidth)**2 + (bath_frequencies)**2) )**(0.5)).tolist()
+            elif bath_form == "gaussian":
+                bath_linewidth = bath_dephasing + self.gamma
+                renormalization_factor = 1.0 # an empirical factor for tunning the Gaussian linewidth
+                bath_couplings = (k * (renormalization_factor * np.exp(-0.5 * bath_frequencies**2 / bath_linewidth**2) )**(0.5)).tolist()
             else:
-                raise RuntimeError("bath_form is ill definited, only uniform and lorentzian are supported!")
+                raise RuntimeError("bath_form is not well defined: only 'uniform', 'lorentzian', and 'gaussian' are supported!")
             self.bath_frequencies = (bath_frequencies + self.frequency).tolist()
             self.bath_couplings = bath_couplings
 
