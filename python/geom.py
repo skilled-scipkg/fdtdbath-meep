@@ -852,7 +852,7 @@ class BathLorentzianSusceptibility(LorentzianSusceptibility):
     density is modeled via the coupling to explicit bath oscillators instead of a phenomenological damping
     used in usual Lorentzian susceptibility. 
     """
-    def __init__(self, num_bath=0, bath_width=None, bath_form=None, bath_dephasing=None,
+    def __init__(self, num_bath=0, bath_width=None, bath_form=None, bath_dephasing=None, bath_gamma=None,
                  bath_frequencies=None, bath_couplings=None, bath_gammas=None, 
                  bath_anharmonicities=None,
                  noise_amp=0.0, **kwargs):
@@ -874,9 +874,11 @@ class BathLorentzianSusceptibility(LorentzianSusceptibility):
         obey a uniform distribution within [omega_0 - bath_width/2, omega_0 + bath_width/2], where
         omega_0 denotes the Lorentzian frequency coupled with the EM field.
 
-        bath_form: "uniform" or "lorentzian" are supported. When "lorentzian" is used, each bath oscillator
-        is coupled to the lorentzian polarization following a Lorentzian shape, while the frequencies of 
-        the bath oscillators remain the uniform distribution.
+        bath_form: "uniform", "lorentzian", and "gaussian" are supported. When "lorentzian" (or "gaussian") is used, 
+        each bath oscillator is coupled to the optical polarization following a Lorentzian (or Gaussian)-shape 
+        polarization-bath coupling, while the frequencies of the bath oscillators remain the uniform distribution.
+
+        bath_gamma: The damping rate of the bath oscillators, assumed to be the same for all bath oscillators.
 
         The other parameters of the bath oscillators are carefully chosen so that the overall susceptibility
         of the polarization density looks like a bare **LorentzianSusceptibility**.
@@ -892,9 +894,9 @@ class BathLorentzianSusceptibility(LorentzianSusceptibility):
         self.noise_amp = noise_amp
 
         # then try to apply the indirect definition
-        if num_bath >= 2 and bath_width is not None and bath_form is not None and bath_dephasing is not None:
-            if len(self.bath_gammas) == 0:
-                self.bath_gammas = [self.gamma] * num_bath
+        if num_bath >= 2 and bath_width is not None and bath_form is not None and bath_dephasing is not None and bath_gamma is not None:
+            # we assume the dissipation of the bath oscillators to be the same
+            self.bath_gammas = [bath_gamma] * num_bath
             bath_frequencies = np.linspace(-bath_width/2.0, bath_width/2.0, num_bath)
             rho_omega = 1.0 / (bath_frequencies[1] - bath_frequencies[0])
             # this k value corresponds to a uniform distribution of the bath oscillators
@@ -904,9 +906,10 @@ class BathLorentzianSusceptibility(LorentzianSusceptibility):
                 bath_couplings = [k] * num_bath
             elif bath_form == "lorentzian":
                 bath_linewidth = bath_dephasing + self.gamma
-                renormalization_factor = (2.0 * bath_linewidth + self.bath_gammas[0]) / bath_linewidth / 2.0
-                # renormalization_factor = 1.0 # an empirical factor 
-                bath_couplings =  (k * (renormalization_factor * (bath_linewidth)**2 / ((bath_linewidth)**2 + (bath_frequencies)**2) )**(0.5)).tolist()
+                renormalization_factor = 1.0 # When bath_linewidth is much larger than bath_gammas, this factor can be set to 1.0
+                # otherwise set it to the following equation (for now let's use 1.0 for simplicity):
+                # renormalization_factor = (2.0 * bath_linewidth + self.bath_gammas[0]) / bath_linewidth / 2.0
+                bath_couplings =  (k * (renormalization_factor * bath_linewidth**2 / (bath_linewidth**2 + (bath_frequencies)**2) )**(0.5)).tolist()
             elif bath_form == "gaussian":
                 bath_linewidth = bath_dephasing + self.gamma
                 renormalization_factor = 1.0 # an empirical factor for tunning the Gaussian linewidth
