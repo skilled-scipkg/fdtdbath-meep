@@ -926,22 +926,22 @@ class BathLorentzianSusceptibility(LorentzianSusceptibility):
         that represents the first-order form of the second-order differential equations:
         
           For the bright mode:
-            Ṗ = P_dot
-            P̈ = -ω₀² P - γ₀ P_dot - Σ_j k_j (Y_j)_dot
+            \dot{P} &= P_{\text{dot}} \\
+            \ddot{P} &= -\omega_{0}^{2} P - \gamma_{0} P_{\text{dot}} - \sum_{j=1}^{N} k_{j}\,\dot{Y}_{j}
             
           For each bath oscillator j:
-            Y_j̇ = (Y_j)_dot
-            (Y_j)̈ = -ω_j² Y_j - γ_j (Y_j)_dot + k_j P_dot
+            \dot{Y}_{j} &= (Y_{j})_{\text{dot}} \\
+            \ddot{Y}_{j} &= -\omega_{j}^{2} Y_{j} - \gamma_{j} (Y_{j})_{\text{dot}} + k_{j} P_{\text{dot}}
 
         The state vector is defined as:
-          x = [P, P_dot, Y₁, (Y₁)_dot, ..., Y_N, (Y_N)_dot]^T.
-        
-        The eigenvalues λ of A satisfy x(t) ~ e^(λt). For a damped oscillator, we expect:
-        
-          λ = -γ_eff/2 - i ω_eff   so that, defining ω = iλ, we have
-          ω = ω_eff - i (γ_eff/2).
-        
-        The oscillator strength is given by the squared modulus of the bright-component 
+          \mathbf{x} = [\,P, \dot{P}, Y_{1}, \dot{Y}_{1}, \dots, Y_{N}, \dot{Y}_{N}]^{\top}.
+
+        The eigenvalues \lambda of A satisfy x(t) ~ e^{\lambda t}. For a damped oscillator, we expect:
+
+          \lambda = -\gamma_{\text{eff}}/2 - i \omega_{\text{eff}}   so that, defining \omega = i\lambda, we have
+          \omega = \omega_{\text{eff}} - i (\gamma_{\text{eff}}/2).
+
+        The oscillator strength is given by the squared modulus of the bright-component
         (first component) of the corresponding eigenvector.
         
         Returns:
@@ -969,7 +969,7 @@ class BathLorentzianSusceptibility(LorentzianSusceptibility):
         # Equation: dP/dt = P_dot
         A[0, 1] = 1.0
         
-        # Equation: d(P_dot)/dt = -ω₀² P - γ₀ P_dot - Σ_{j=1}^{N} k_j (Y_j)_dot.
+        # Equation: \frac{dP_{\text{dot}}}{dt} = -\omega_{0}^{2} P - \gamma_{0} P_{\text{dot}} - \sum_{j=1}^{N} k_{j}\,\dot{Y}_{j}.
         A[1, 0] = -self.frequency**2
         A[1, 1] = -self.gamma
         # For each bath oscillator j, (Y_j)_dot is at index: 2*(j+1)+1.
@@ -983,7 +983,8 @@ class BathLorentzianSusceptibility(LorentzianSusceptibility):
             vel_idx = pos_idx + 1
             # Equation: d(Y_j)/dt = (Y_j)_dot
             A[pos_idx, vel_idx] = 1.0
-            # Equation: d((Y_j)_dot)/dt = -ω_j² Y_j - γ_j (Y_j)_dot + k_j P_dot.
+            # Equation:
+            #   \frac{d\dot{Y}_{j}}{dt} = -\omega_{j}^{2} Y_{j} - \gamma_{j} \dot{Y}_{j} + k_{j} P_{\text{dot}}
             A[vel_idx, pos_idx] = -self.bath_frequencies[j]**2
             A[vel_idx, vel_idx] = -self.bath_gammas[j]
             # Coupling from P_dot (which is at index 1)
@@ -991,13 +992,13 @@ class BathLorentzianSusceptibility(LorentzianSusceptibility):
         
         # Now compute eigenvalues and eigenvectors of A.
         eigvals, eigvecs = np.linalg.eig(A)
-        # Convert eigenvalues λ to eigenfrequencies ω via ω = i λ.
+        # Convert eigenvalues λ to eigenfrequencies \omega via \omega = i \lambda.
         omega_eigs = 1j * eigvals
-        # Each eigenfrequency should be of the form: ω = ω_eff - i (γ_eff/2).
+        # Each eigenfrequency should be of the form: \omega = \omega_{\text{eff}} - i (\gamma_{\text{eff}}/2).
         # So we extract:
-        #   Resonance frequency: ω_eff = Re(ω)
-        #   Full decay rate: γ_eff = -2 * Im(ω)
-        
+        #   Resonance frequency: \omega_{\text{eff}} = \text{Re}(\omega)
+        #   Full decay rate: \gamma_{\text{eff}} = -2 * \text{Im}(\omega)
+
         # Filter to keep only modes with positive resonance frequencies
         positive_indices = np.where(np.real(omega_eigs) > 0)[0]
         omega_eigs_pos = omega_eigs[positive_indices]
@@ -1008,7 +1009,7 @@ class BathLorentzianSusceptibility(LorentzianSusceptibility):
         for i in range(len(omega_eigs_pos)):
             omega_i = omega_eigs_pos[i]
             freq = np.real(omega_i)
-            gamma_eff = -2.0 * np.imag(omega_i)  # since ω = ω_eff - i(γ_eff/2)
+            gamma_eff = -2.0 * np.imag(omega_i)  # since \omega = \omega_{\text{eff}} - i(\gamma_{\text{eff}}/2)
             sigma_weight = np.abs(eigvecs_pos[0, i])**2.0 * (self.frequency / freq)**2.0 * 2.0 # oscillator strength from the bright-mode component
             mode = {"frequency": freq, "gamma": gamma_eff, "sigma_weight": sigma_weight}
             independent_oscillators.append(mode)

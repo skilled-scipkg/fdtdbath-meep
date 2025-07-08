@@ -438,7 +438,8 @@ void bath_lorentzian_susceptibility::update_P(realnum *W[NUM_FIELD_COMPONENTS][2
   const realnum omega0dtsqr = omega2pi * omega2pi * dt * dt;
   const realnum gamma1inv = 1 / (1 + g2pi * dt / 2), gamma1 = (1 - g2pi * dt / 2);
   const realnum omega0dtsqr_denom = no_omega_0_denominator ? 0 : omega0dtsqr;
-  const realnum amp = omega2pi * noise_amp * sqrt(g2pi) * dt * dt / (1 + g2pi * dt / 2);
+  // copy the noise amp from the Noisy Lorentzian susceptibility
+  const realnum amp = omega2pi * noise_amp * sqrt(g2pi) * dt * dt / (1 + g2pi * dt / 2); 
   (void)W_prev; // unused;
 
   // let's define some prefactors necessary for bath_lorentzian calculations
@@ -595,9 +596,9 @@ void bath_lorentzian_susceptibility::update_P(realnum *W[NUM_FIELD_COMPONENTS][2
             {
               //p_bath[k][i] = coeff_a[k] * pbathcur[k] + (coeff_b[k] + 1.0) * pbathpre[k] + coeff_c[k] * (p[i] - pp[i]);
               p_bath[k][i] = coeff_a[k] * pbathcur[k] + coeff_bplusone[k] * pp_bath[k][i] + coeff_c[k] * p_pp_diff + coeff_d[k] * pbathcur[k] * pbathcur[k] * pbathcur[k];
+              // consider to add a noisy term to account for the thermal fluctuations of the bath oscillators
               if (noise_amp > 1e-10)
                 p_bath[k][i] += gaussian_random(0, amp * sqrt(s[i]));
-              // consider to add a noisy term to account for the thermal fluctuations
               // reset the previous values
               pp_bath[k][i] = pbathcur[k];
             }
