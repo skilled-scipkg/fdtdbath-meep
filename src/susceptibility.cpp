@@ -615,8 +615,8 @@ void bath_lorentzian_susceptibility::update_P(realnum *W[NUM_FIELD_COMPONENTS][2
               pbathcur[k] = pbc_k; 
               sum_kiaiYi_cur += coeff_ak[k] * pbc_k;
               sum_kibiYi_pre += coeff_bk[k] * pp_bath_i[k];
-              //if (has_anharmonicity)
-              sum_kidiYi3_cur += coeff_dk[k] * pbc_k * pbc_k + coeff_ek[k] * pbc_k * pbc_k * pbc_k;
+              if (has_anharmonicity)
+                sum_kidiYi3_cur += coeff_dk[k] * pbc_k * pbc_k + coeff_ek[k] * pbc_k * pbc_k * pbc_k;
 
             }
 
@@ -651,7 +651,7 @@ void bath_lorentzian_susceptibility::update_P(realnum *W[NUM_FIELD_COMPONENTS][2
               //p_bath[k][i] = coeff_a[k] * pbathcur[k] + (coeff_b[k] + 1.0) * pbathpre[k] + coeff_c[k] * (p[i] - pp[i]);
               double anharmonicity_term = 0.0;
               if (has_anharmonicity)
-                 anharmonicity_term = coeff_d[k] * pbathcur[k] * pbathcur[k] + coeff_e[k] * pbathcur[k] * pbathcur[k] * pbathcur[k];
+                anharmonicity_term = coeff_d[k] * pbathcur[k] * pbathcur[k] + coeff_e[k] * pbathcur[k] * pbathcur[k] * pbathcur[k];
               p_bath_i[k] = coeff_a[k] * pbathcur[k] + coeff_bplusone[k] * pp_bath_i[k] + coeff_c[k] * p_pp_diff + anharmonicity_term;
               // consider to add a noisy term to account for the thermal fluctuations of the bath oscillators
               if (noise_amp > 1e-10)
