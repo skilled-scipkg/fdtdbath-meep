@@ -449,7 +449,8 @@ void bath_lorentzian_susceptibility::update_P(realnum *W[NUM_FIELD_COMPONENTS][2
   // and then optimize it.
   //typedef std::chrono::high_resolution_clock Clock;
   //std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-
+  
+  /*
   std::vector<realnum> bathfreq2pi, bathgamma2pi, bath_couplings2pi, bath_anharmonicities2pi;
   for (int i = 0; i < num_bath; i++)
   {
@@ -458,6 +459,17 @@ void bath_lorentzian_susceptibility::update_P(realnum *W[NUM_FIELD_COMPONENTS][2
     bath_couplings2pi.push_back(bath_couplings[i] * 2 * pi);
     // avoid adding the 2pi factor for the bath anharmonicity
     bath_anharmonicities2pi.push_back(bath_anharmonicities[i]);
+  }
+    */
+
+  realnum bathfreq2pi[num_bath], bathgamma2pi[num_bath], bath_couplings2pi[num_bath], bath_anharmonicities2pi[num_bath];
+  for (int i = 0; i < num_bath; i++)
+  {
+    bathfreq2pi[i] = bath_frequencies[i] * 2 * pi;
+    bathgamma2pi[i] = bath_gammas[i] * 2 * pi;
+    bath_couplings2pi[i] = bath_couplings[i] * 2 * pi;
+    // avoid adding the 2pi factor for the bath anharmonicity
+    bath_anharmonicities2pi[i] = bath_anharmonicities[i];
   }
   // second let's calculate ai, bi, and ci
   //std::vector<realnum> coeff_a, coeff_b, coeff_c, coeff_ak, coeff_bk;
