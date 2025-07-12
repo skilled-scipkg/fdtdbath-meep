@@ -461,14 +461,15 @@ void bath_lorentzian_susceptibility::update_P(realnum *W[NUM_FIELD_COMPONENTS][2
   }
   // second let's calculate ai, bi, and ci
   //std::vector<realnum> coeff_a, coeff_b, coeff_c, coeff_ak, coeff_bk;
-  realnum coeff_a[num_bath], coeff_b[num_bath], coeff_bplusone[num_bath], coeff_c[num_bath], coeff_d[num_bath], coeff_ak[num_bath], coeff_bk[num_bath], coeff_dk[num_bath];
+  realnum coeff_a[num_bath], coeff_b[num_bath], coeff_bplusone[num_bath], coeff_c[num_bath], coeff_d[num_bath], coeff_e[num_bath], coeff_ak[num_bath], coeff_bk[num_bath], coeff_dk[num_bath], coeff_ek[num_bath];
   for (int i = 0; i < num_bath; i++)
   {
     realnum denom = 1.0 + bathgamma2pi[i] * dt / 2.0;
     realnum ai = (2.0 - bathfreq2pi[i] * bathfreq2pi[i] * dt * dt) / denom;
     realnum bi = -2.0 / denom;
     realnum ci = bath_couplings2pi[i] * dt / 2.0 / denom;
-    realnum di = -bath_anharmonicities2pi[i] * dt * dt / denom;
+    realnum di = 1.5 * bath_anharmonicities2pi[i] * dt * dt * bathfreq2pi[i] * bathfreq2pi[i] / denom;
+    realnum ei = -7.0 / 6.0 * bath_anharmonicities2pi[i] * bath_anharmonicities2pi[i] * dt * dt * bathfreq2pi[i] * bathfreq2pi[i] / denom;
     //coeff_a.push_back(ai);
     //coeff_b.push_back(bi);
     //coeff_c.push_back(ci);
@@ -479,9 +480,11 @@ void bath_lorentzian_susceptibility::update_P(realnum *W[NUM_FIELD_COMPONENTS][2
     coeff_b[i] = bi;
     coeff_c[i] = ci;
     coeff_d[i] = di;
+    coeff_e[i] = ei;
     coeff_ak[i] = dt / 2.0 * ai * bath_couplings2pi[i];
     coeff_bk[i] = dt / 2.0 * bi * bath_couplings2pi[i];
     coeff_dk[i] = dt / 2.0 * di * bath_couplings2pi[i];
+    coeff_ek[i] = dt / 2.0 * ei * bath_couplings2pi[i];
     coeff_bplusone[i] = bi + 1.0;
   }
   //realnum ap = 1.0 + dt / 2.0 * std::inner_product(bath_couplings2pi.begin(), bath_couplings2pi.end(), coeff_c.begin(), 0.0);
@@ -582,7 +585,7 @@ void bath_lorentzian_susceptibility::update_P(realnum *W[NUM_FIELD_COMPONENTS][2
               pbathcur[k] = p_bath[k][i];
               sum_kiaiYi_cur += coeff_ak[k] * pbathcur[k];
               sum_kibiYi_pre += coeff_bk[k] * pp_bath[k][i];
-              sum_kidiYi3_cur += coeff_dk[k] * pbathcur[k] * pbathcur[k] * pbathcur[k];
+              sum_kidiYi3_cur += coeff_dk[k] * pbathcur[k] * pbathcur[k] + coeff_ek[k] * pbathcur[k] * pbathcur[k] * pbathcur[k];
             }
 
             // precompute some important quantities
@@ -595,7 +598,7 @@ void bath_lorentzian_susceptibility::update_P(realnum *W[NUM_FIELD_COMPONENTS][2
             for (int k = 0; k < num_bath; k++)
             {
               //p_bath[k][i] = coeff_a[k] * pbathcur[k] + (coeff_b[k] + 1.0) * pbathpre[k] + coeff_c[k] * (p[i] - pp[i]);
-              p_bath[k][i] = coeff_a[k] * pbathcur[k] + coeff_bplusone[k] * pp_bath[k][i] + coeff_c[k] * p_pp_diff + coeff_d[k] * pbathcur[k] * pbathcur[k] * pbathcur[k];
+              p_bath[k][i] = coeff_a[k] * pbathcur[k] + coeff_bplusone[k] * pp_bath[k][i] + coeff_c[k] * p_pp_diff + coeff_d[k] * pbathcur[k] * pbathcur[k] + coeff_e[k] * pbathcur[k] * pbathcur[k] * pbathcur[k];
               // consider to add a noisy term to account for the thermal fluctuations of the bath oscillators
               if (noise_amp > 1e-10)
                 p_bath[k][i] += gaussian_random(0, amp * sqrt(s[i]));
