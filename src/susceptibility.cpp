@@ -640,8 +640,8 @@ void bath_lorentzian_susceptibility::update_P(realnum *W[NUM_FIELD_COMPONENTS][2
             // #pragma omp simd
             // reduce the cost for Gaussian random number generation by initializing the seed only once
             //std::mt19937_64 random;
-            // replace mt19937_64 with a faster pcg64 seed
-            pcg32 random(5489UL);
+            // replace mt19937_64 with a faster pcg seed
+            pcg32_fast random(5489UL);
 
             cxx::ziggurat_normal_distribution<double> normal_distr(0, gaussian_random_amp);
             // I can also make this faster by generating num_bath gaussian random numbers at once
