@@ -645,25 +645,6 @@ void bath_lorentzian_susceptibility::update_P(realnum *W[NUM_FIELD_COMPONENTS][2
             pcg32_fast random(seed_source);
             cxx::ziggurat_normal_distribution<double> normal_distr(0, gaussian_random_amp);
             // I can also make this faster by generating num_bath gaussian random numbers at once
-            /*
-            for (int k = 0; k < num_bath; k++)
-            {
-              //p_bath[k][i] = coeff_a[k] * pbathcur[k] + (coeff_b[k] + 1.0) * pbathpre[k] + coeff_c[k] * (p[i] - pp[i]);
-              double anharmonicity_term = 0.0;
-              if (has_anharmonicity)
-                anharmonicity_term = coeff_d[k] * pbathcur[k] * pbathcur[k] + coeff_e[k] * pbathcur[k] * pbathcur[k] * pbathcur[k];
-              p_bath_i[k] = coeff_a[k] * pbathcur[k] + coeff_bplusone[k] * pp_bath_i[k] + coeff_c[k] * p_pp_diff + anharmonicity_term;
-              // consider to add a noisy term to account for the thermal fluctuations of the bath oscillators
-              if (noise_amp > 1e-10)
-                //p_bath_i[k] += gaussian_random(0, gaussian_random_amp);
-                // the zigguart gaussian number generator is x5 faster than the above line 
-                p_bath_i[k] += normal_distr(random);
-              // reset the previous values
-              pp_bath_i[k] = pbathcur[k];
-            }
-            */
-
-            // with both anharmonicity and noise
             for (int k = 0; k < num_bath; k++)
             {
               //p_bath[k][i] = coeff_a[k] * pbathcur[k] + (coeff_b[k] + 1.0) * pbathpre[k] + coeff_c[k] * (p[i] - pp[i]);
