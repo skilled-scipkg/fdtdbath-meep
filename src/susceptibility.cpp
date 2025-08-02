@@ -455,6 +455,9 @@ void bath_lorentzian_susceptibility::update_P(realnum *W[NUM_FIELD_COMPONENTS][2
   // and then optimize it.
   //typedef std::chrono::high_resolution_clock Clock;
   //std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+  realnum dtover2 = dt / 2.0;
+  realnum twopi = 2 * pi;
+  realnum dt2 = dt * dt;
 
   realnum bathfreq2pi[num_bath], bathgamma2pi[num_bath], bath_couplings2pi[num_bath];
   bool has_anharmonicity = false;
@@ -464,35 +467,30 @@ void bath_lorentzian_susceptibility::update_P(realnum *W[NUM_FIELD_COMPONENTS][2
 
   for (int i = 0; i < num_bath; i++)
   {
-    bathfreq2pi[i] = bath_frequencies[i] * 2 * pi;
-    bathgamma2pi[i] = bath_gammas[i] * 2 * pi;
-    bath_couplings2pi[i] = bath_couplings[i] * 2 * pi;
+    bathfreq2pi[i] = bath_frequencies[i] * twopi;
+    bathgamma2pi[i] = bath_gammas[i] * twopi;
+    bath_couplings2pi[i] = bath_couplings[i] * twopi;
     // avoid adding the 2pi factor for the bath anharmonicity
     if (abs(bath_anharmonicities[i]) > 1e-20) has_anharmonicity = true; // check if any anharmonicity is present
   
-    realnum denom = 1.0 + bathgamma2pi[i] * dt / 2.0;
-    realnum ai = (2.0 - bathfreq2pi[i] * bathfreq2pi[i] * dt * dt) / denom;
+    realnum denom = 1.0 + bathgamma2pi[i] * dtover2;
+    realnum ai = (2.0 - bathfreq2pi[i] * bathfreq2pi[i] * dt2) / denom;
     realnum bi = -2.0 / denom;
-    realnum ci = bath_couplings2pi[i] * dt / 2.0 / denom;
-    realnum di = 1.5 * bath_anharmonicities[i] * dt * dt * bathfreq2pi[i] * bathfreq2pi[i] / denom;
-    realnum ei = -7.0 / 6.0 * bath_anharmonicities[i] * bath_anharmonicities[i] * dt * dt * bathfreq2pi[i] * bathfreq2pi[i] / denom;
-    //coeff_a.push_back(ai);
-    //coeff_b.push_back(bi);
-    //coeff_c.push_back(ci);
-    //coeff_ak.push_back(ai * bath_couplings2pi[i]);
-    //coeff_bk.push_back(bi * bath_couplings2pi[i]);
+    realnum ci = bath_couplings2pi[i] * dtover2 / denom;
+    realnum di = 1.5 * bath_anharmonicities[i] * dt2 * bathfreq2pi[i] * bathfreq2pi[i] / denom;
+    realnum ei = -7.0 / 6.0 * bath_anharmonicities[i] * bath_anharmonicities[i] * dt2 * bathfreq2pi[i] * bathfreq2pi[i] / denom;
 
     coeff_a[i] = ai;
     coeff_c[i] = ci;
     coeff_d[i] = di;
     coeff_e[i] = ei;
-    coeff_ak[i] = dt / 2.0 * ai * bath_couplings2pi[i];
-    coeff_bk[i] = dt / 2.0 * bi * bath_couplings2pi[i];
-    coeff_dk[i] = dt / 2.0 * di * bath_couplings2pi[i];
-    coeff_ek[i] = dt / 2.0 * ei * bath_couplings2pi[i];
+    coeff_ak[i] = dtover2 * ai * bath_couplings2pi[i];
+    coeff_bk[i] = dtover2 * bi * bath_couplings2pi[i];
+    coeff_dk[i] = dtover2 * di * bath_couplings2pi[i];
+    coeff_ek[i] = dtover2 * ei * bath_couplings2pi[i];
     coeff_bplusone[i] = bi + 1.0;
     
-    realnum coupling_term = dt / 2.0 * bath_couplings2pi[i] * ci;
+    realnum coupling_term = dtover2 * bath_couplings2pi[i] * ci;
     ap += coupling_term;
     prefactor_pnminus -= coupling_term;
   }
@@ -589,6 +587,8 @@ void bath_lorentzian_susceptibility::update_P(realnum *W[NUM_FIELD_COMPONENTS][2
             //  pbathpre.push_back(pp_bath[k][i]);
             //}
             realnum pbathcur[num_bath];
+            realnum pbathcur2[num_bath];
+            realnum pbathcur3[num_bath];
             realnum sum_kiaiYi_cur = 0;
             realnum sum_kibiYi_pre = 0;
             realnum sum_kidiYi3_cur = 0;
@@ -606,10 +606,12 @@ void bath_lorentzian_susceptibility::update_P(realnum *W[NUM_FIELD_COMPONENTS][2
               // new code for improving the performance when iterating the bath field
               realnum pbc_k = p_bath_i[k];
               pbathcur[k] = pbc_k; 
+              pbathcur2[k] = pbc_k * pbc_k;
+              pbathcur3[k] = pbathcur2[k] * pbc_k;
               sum_kiaiYi_cur += coeff_ak[k] * pbc_k;
               sum_kibiYi_pre += coeff_bk[k] * pp_bath_i[k];
               if (has_anharmonicity)
-                sum_kidiYi3_cur += coeff_dk[k] * pbc_k * pbc_k + coeff_ek[k] * pbc_k * pbc_k * pbc_k;
+                sum_kidiYi3_cur += coeff_dk[k] * pbathcur2[k] + coeff_ek[k] * pbathcur3[k];
             }
 
             // precompute some important quantities
@@ -645,12 +647,13 @@ void bath_lorentzian_susceptibility::update_P(realnum *W[NUM_FIELD_COMPONENTS][2
             pcg32_fast random(seed_source);
             cxx::ziggurat_normal_distribution<double> normal_distr(0, gaussian_random_amp);
             // I can also make this faster by generating num_bath gaussian random numbers at once
+            /*
             for (int k = 0; k < num_bath; k++)
             {
               //p_bath[k][i] = coeff_a[k] * pbathcur[k] + (coeff_b[k] + 1.0) * pbathpre[k] + coeff_c[k] * (p[i] - pp[i]);
               double anharmonicity_term = 0.0;
               if (has_anharmonicity)
-                anharmonicity_term = coeff_d[k] * pbathcur[k] * pbathcur[k] + coeff_e[k] * pbathcur[k] * pbathcur[k] * pbathcur[k];
+                anharmonicity_term = coeff_d[k] * pbathcur2[k] + coeff_e[k] * pbathcur3[k];
               p_bath_i[k] = coeff_a[k] * pbathcur[k] + coeff_bplusone[k] * pp_bath_i[k] + coeff_c[k] * p_pp_diff + anharmonicity_term;
               // consider to add a noisy term to account for the thermal fluctuations of the bath oscillators
               if (noise_amp > 1e-10)
@@ -659,6 +662,88 @@ void bath_lorentzian_susceptibility::update_P(realnum *W[NUM_FIELD_COMPONENTS][2
                 p_bath_i[k] += normal_distr(random);
               // reset the previous values
               pp_bath_i[k] = pbathcur[k];
+            }
+            */
+
+            if (!has_anharmonicity)
+            {
+              if (noise_amp <= 1e-10)
+              {
+                // no anharmonicity and no noise, nothing to do
+                for (int k = 0; k < num_bath; k++)
+            {
+              //p_bath[k][i] = coeff_a[k] * pbathcur[k] + (coeff_b[k] + 1.0) * pbathpre[k] + coeff_c[k] * (p[i] - pp[i]);
+              //double anharmonicity_term = 0.0;
+              //if (has_anharmonicity)
+              //  anharmonicity_term = coeff_d[k] * pbathcur2[k] + coeff_e[k] * pbathcur3[k];
+              p_bath_i[k] = coeff_a[k] * pbathcur[k] + coeff_bplusone[k] * pp_bath_i[k] + coeff_c[k] * p_pp_diff; // + anharmonicity_term;
+              // consider to add a noisy term to account for the thermal fluctuations of the bath oscillators
+              //if (noise_amp > 1e-10)
+                //p_bath_i[k] += gaussian_random(0, gaussian_random_amp);
+                // the zigguart gaussian number generator is x5 faster than the above line 
+              //  p_bath_i[k] += normal_distr(random);
+              // reset the previous values
+              pp_bath_i[k] = pbathcur[k];
+            }
+            
+              }
+              else
+              {
+                for (int k = 0; k < num_bath; k++)
+            {
+              //p_bath[k][i] = coeff_a[k] * pbathcur[k] + (coeff_b[k] + 1.0) * pbathpre[k] + coeff_c[k] * (p[i] - pp[i]);
+              //double anharmonicity_term = 0.0;
+              //if (has_anharmonicity)
+              //  anharmonicity_term = coeff_d[k] * pbathcur2[k] + coeff_e[k] * pbathcur3[k];
+              p_bath_i[k] = coeff_a[k] * pbathcur[k] + coeff_bplusone[k] * pp_bath_i[k] + coeff_c[k] * p_pp_diff; // + anharmonicity_term;
+              // consider to add a noisy term to account for the thermal fluctuations of the bath oscillators
+              if (noise_amp > 1e-10)
+                //p_bath_i[k] += gaussian_random(0, gaussian_random_amp);
+                // the zigguart gaussian number generator is x5 faster than the above line 
+                p_bath_i[k] += normal_distr(random);
+              // reset the previous values
+              pp_bath_i[k] = pbathcur[k];
+            }
+              }
+            }
+            else
+            {
+              if (noise_amp <= 1e-10)
+              {
+                for (int k = 0; k < num_bath; k++)
+            {
+              //p_bath[k][i] = coeff_a[k] * pbathcur[k] + (coeff_b[k] + 1.0) * pbathpre[k] + coeff_c[k] * (p[i] - pp[i]);
+              double anharmonicity_term = 0.0;
+              if (has_anharmonicity)
+                anharmonicity_term = coeff_d[k] * pbathcur2[k] + coeff_e[k] * pbathcur3[k];
+              p_bath_i[k] = coeff_a[k] * pbathcur[k] + coeff_bplusone[k] * pp_bath_i[k] + coeff_c[k] * p_pp_diff + anharmonicity_term;
+              // consider to add a noisy term to account for the thermal fluctuations of the bath oscillators
+              //if (noise_amp > 1e-10)
+                //p_bath_i[k] += gaussian_random(0, gaussian_random_amp);
+                // the zigguart gaussian number generator is x5 faster than the above line 
+              //  p_bath_i[k] += normal_distr(random);
+              // reset the previous values
+              pp_bath_i[k] = pbathcur[k];
+            }
+              }
+              else
+              {
+                for (int k = 0; k < num_bath; k++)
+            {
+              //p_bath[k][i] = coeff_a[k] * pbathcur[k] + (coeff_b[k] + 1.0) * pbathpre[k] + coeff_c[k] * (p[i] - pp[i]);
+              double anharmonicity_term = 0.0;
+              if (has_anharmonicity)
+                anharmonicity_term = coeff_d[k] * pbathcur2[k] + coeff_e[k] * pbathcur3[k];
+              p_bath_i[k] = coeff_a[k] * pbathcur[k] + coeff_bplusone[k] * pp_bath_i[k] + coeff_c[k] * p_pp_diff + anharmonicity_term;
+              // consider to add a noisy term to account for the thermal fluctuations of the bath oscillators
+              if (noise_amp > 1e-10)
+                //p_bath_i[k] += gaussian_random(0, gaussian_random_amp);
+                // the zigguart gaussian number generator is x5 faster than the above line 
+                p_bath_i[k] += normal_distr(random);
+              // reset the previous values
+              pp_bath_i[k] = pbathcur[k];
+            }
+              }
             }
 
             pp[i] = pcur;
