@@ -227,8 +227,8 @@ HL_IFACE =                  \
     $(srcdir)/timing_measurements.py       \
     $(srcdir)/visualization.py  \
     $(srcdir)/materials.py  \
-    $(srcdir)/verbosity_mgr.py
-
+    $(srcdir)/verbosity_mgr.py  \
+    $(srcdir)/molecule.py 
 
 pkgpython_PYTHON = __init__.py $(HL_IFACE)
 

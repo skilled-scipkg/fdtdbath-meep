@@ -27,6 +27,7 @@
 
 #include "meep_internals.hpp"
 #include "config.h"
+#include "meep.hpp"
 
 #define UNUSED(x) (void)x // silence compiler warnings
 
@@ -67,6 +68,56 @@ realnum *array_to_all(realnum *array, size_t array_size) {
 complex<realnum> *array_to_all(complex<realnum> *array, size_t array_size) {
   return (complex<realnum> *)array_to_all((realnum *)array, 2 * array_size);
 }
+
+/* ----------------------------------------------------------------- */
+/*  Return pointer to the raw P[dir] array for susceptibility #n in  */
+/*  field_type ft (E_stuff or B_stuff).  Returns nullptr if that     */
+/*  susceptibility is absent in this chunk.                          */
+/* ----------------------------------------------------------------- */
+static inline const realnum *
+pol_ptr(const fields_chunk *fc, field_type ft, int susc_idx, component c)
+{
+    polarization_state *p = fc->pol[ft];
+    for (int i = 0; p && i < susc_idx; ++i) p = p->next;
+    if (!p || !p->data) return nullptr;
+
+    /* Skip the two size_t scalars to reach the P-pointer table */
+    auto **Parray = reinterpret_cast<realnum **>(
+                        static_cast<char *>(p->data) + 2*sizeof(std::size_t));
+    /* cmp = 0 → real part, cmp = 1 → imag part */
+    return Parray[2 * static_cast<int>(c)];  // real part of P_c
+}
+
+/* ----------------------------------------------------------------- */
+/*  Return pointer to bath oscillator k (current step) for            */
+/*  component c, cmp (0/1), susceptibility #n in field_type ft.       */
+/* ----------------------------------------------------------------- */
+
+static inline const realnum *
+bath_base(const fields_chunk *fc, field_type ft, int susc_idx, component c)
+{
+    polarization_state *p = fc->pol[ft];
+    for (int i = 0; p && i < susc_idx; ++i) p = p->next;     // honor susc_idx
+    if (!p || !p->data) return nullptr;
+
+    // Must be the bath susceptibility at THIS index
+    if (!dynamic_cast<const bath_lorentzian_susceptibility *>(p->s))
+        return nullptr;
+
+    const char   *base = static_cast<const char *>(p->data);
+    const size_t *meta = reinterpret_cast<const size_t *>(base);
+    const size_t  nt   = meta[1];
+
+    // pointer table to P[c][cmp]
+    realnum *const *Parray =
+        reinterpret_cast<realnum *const *>(base + 2*sizeof(size_t));
+
+    const realnum *P0 = Parray[2 * static_cast<int>(c)];   // cmp = 0
+    if (!P0) return nullptr;
+
+    return P0 + 2*nt;   // AoS bath block starts after P and P_prev
+}
+
 
 } // namespace
 
@@ -137,6 +188,25 @@ static double default_field_rfunc(const complex<realnum> *fields, const vec &loc
   (void)data_; // unused
   return real(cdouble(fields[0]));
 }
+
+struct pol_slice_data : array_slice_data {
+  field_type ft;
+  int susc_idx;
+  direction dir;
+  component comp;
+  ptrdiff_t off0 = 0;
+  ptrdiff_t off1 = 0;
+};
+
+struct pol_bath_slice_data : array_slice_data {
+  field_type ft;
+  int susc_idx;
+  direction dir;
+  int num_bath;
+  component comp;
+  ptrdiff_t off0 = 0;
+  ptrdiff_t off1 = 0;
+};
 
 /***************************************************************/
 /* callback function passed to loop_in_chunks to compute       */
@@ -780,6 +850,283 @@ complex<realnum> *fields::get_source_slice(const volume &where, component source
   array_to_all(slice, slice_size);
 
   return slice;
+}
+
+/* ------------------------------------------------------------------ */
+/*  BEGIN POLARISATION SLICE –  fields::get_pol_array_slice()         */
+/* ------------------------------------------------------------------ */
+
+static void pol_slice_chunkloop(fields_chunk *fc, int ichnk, component cgrid,
+                                ivec is, ivec ie, vec s0, vec s1, vec e0, vec e1,
+                                double dV0, double dV1, ivec shift,
+                                complex<double> shift_phase, const symmetry &S,
+                                int sn, void *data_)
+{
+  UNUSED(ichnk); UNUSED(cgrid); UNUSED(s0); UNUSED(s1);
+  UNUSED(e0);    UNUSED(e1);    UNUSED(dV0); UNUSED(dV1);
+
+  auto *data = static_cast<pol_slice_data *>(data_);
+
+  /* =========  offset / stride bookkeeping (unchanged)  =========== */
+  int start[3]={0}, count[3]={1}; ptrdiff_t offset[3]={0};
+  size_t dims[3]={1,1,1};
+  ptrdiff_t stride[3]={1,1,1};
+  ivec isS = S.transform(is,sn)+shift, ieS = S.transform(ie,sn)+shift;
+
+  ivec permute(zero_ivec(fc->gv.dim));
+  for(int i=0;i<3;++i) permute.set_direction(fc->gv.yucky_direction(i),i);
+  permute = S.transform_unshifted(permute,sn);
+  LOOP_OVER_DIRECTIONS(permute.dim,d)
+      permute.set_direction(d,abs(permute.in_direction(d)));
+
+  for(int i=0;i<data->rank;++i){
+      direction d=data->ds[i];
+      int isd=isS.in_direction(d), ied=ieS.in_direction(d);
+      start[i]=(std::min(isd,ied)-data->min_corner.in_direction(d))/2;
+      count[i]=abs(ied-isd)/2+1;
+      if(ied<isd) offset[permute.in_direction(d)]=count[i]-1;
+  }
+
+  for(int i=0;i<data->rank;++i){
+      direction d=data->ds[i];
+      dims[i]=(data->max_corner.in_direction(d)-data->min_corner.in_direction(d))/2+1;
+  }
+
+  for(int i=0;i<data->rank;++i){
+      direction d=data->ds[i]; int j=permute.in_direction(d);
+      for(int k=i+1;k<data->rank;++k) stride[j]*=dims[k];
+      offset[j]*=stride[j]; if(offset[j]) stride[j]*=-1;
+  }
+  ptrdiff_t sco = start[0]*dims[1]*dims[2] + start[1]*dims[2] + start[2];
+
+  realnum *slice = static_cast<realnum *>(data->vslice);
+
+  /* centre->yee offsets for the requested component (Ex,Ez,…) */
+  fc->gv.yee2cent_offsets(data->comp, data->off0, data->off1);
+
+  vec rshift(shift*(0.5*fc->gv.inva));
+
+  const realnum *Pbase = pol_ptr(fc, data->ft, data->susc_idx, data->comp);
+
+  if (!Pbase) return;
+
+  LOOP_OVER_IVECS(fc->gv, is, ie, idx) {
+      IVEC_LOOP_LOC(fc->gv, loc);
+      loc = S.transform(loc,sn)+rshift;
+
+      /* --- average four staggered points --- */
+      realnum Pval = 0.25f*( Pbase[idx]
+                           + Pbase[idx + data->off0]
+                           + Pbase[idx + data->off1]
+                           + Pbase[idx + data->off0 + data->off1] );
+
+      ptrdiff_t idx2 =
+        sco + ((((offset[0]+offset[1]+offset[2]) + loop_i1*stride[0])
+                + loop_i2*stride[1]) + loop_i3*stride[2]);
+
+      slice[idx2] = Pval;
+  }
+}
+
+realnum *fields::get_pol_array_slice(const volume &where, realnum *slice, 
+                                     int susc_idx, component comp, bool snap)
+{
+  field_type ft = E_stuff;
+  am_now_working_on(FieldOutput);
+
+  direction dir = component_direction(comp);
+  if (dir < X || dir > Z)
+      meep::abort("get_pol_array_slice: component must be Ex...Ez or Hx...Hz");
+
+  /* --- dimensions & meta info (reuse existing helper) ------------- */
+  size_t dims[3]; direction dirs[3];
+  pol_slice_data data;
+  int rank = get_array_slice_dimensions(where, dims, dirs,
+                                        false, snap, 0, &data);
+
+  if (rank == 0) { finished_working(); return nullptr; }
+
+  size_t slice_size = data.slice_size;
+  bool   caller_buf = slice;
+  if (!caller_buf)
+      slice = (realnum*)calloc(slice_size, sizeof(realnum));
+  else
+      memset(slice, 0, slice_size*sizeof(realnum));
+
+  /* fill the extra fields we added */
+  data.vslice    = slice;
+  data.ft        = ft;
+  data.susc_idx  = susc_idx;
+  data.dir       = dir;
+  data.comp      = comp;    
+  data.rank      = rank;   
+  data.off0      = 0;   
+  data.off1      = 0;
+
+  //printf("before loop_in_chunks: slice_size = %zu, rank = %d\n", slice_size, rank);
+
+  loop_in_chunks(pol_slice_chunkloop, &data, where, Centered, true, snap);
+
+  if (!snap) {
+      slice = collapse_array(slice, &rank, dims, dirs, where, 1);
+      rank  = get_array_slice_dimensions(where, dims, dirs, true, false);
+      slice_size = dims[0]*(rank>=2?dims[1]:1)*(rank==3?dims[2]:1);
+  }
+
+  //printf("before array_to_all: slice_size = %zu, rank = %d\n", slice_size, rank);
+  array_to_all(slice, slice_size);
+
+  //printf("after array_to_all: slice_size = %zu, rank = %d\n", slice_size, rank);
+
+  finished_working();
+  
+  return slice;
+}
+
+
+/* ------------------------------------------------------------------ */
+/*  END POLARISATION SLICE –  fields::get_pol_array_slice()           */
+/* ------------------------------------------------------------------ */
+
+static void bath_slice_chunkloop(fields_chunk *fc, int ichnk, component cgrid,
+                                 ivec is, ivec ie, vec s0, vec s1, vec e0, vec e1,
+                                 double dV0, double dV1, ivec shift,
+                                 complex<double> shift_phase, const symmetry &S,
+                                 int sn, void *data_)
+{
+    UNUSED(ichnk); UNUSED(cgrid); UNUSED(s0); UNUSED(s1);
+    UNUSED(e0);    UNUSED(e1);    UNUSED(dV0); UNUSED(dV1);
+
+    auto *data = static_cast<pol_bath_slice_data *>(data_);
+
+    int start[3]={0}, count[3]={1};        
+    size_t dims[3]={1,1,1};
+    ptrdiff_t offset[3]={0}, stride[3]={1,1,1};
+    ivec isS = S.transform(is,sn)+shift, ieS = S.transform(ie,sn)+shift;
+
+    ivec permute(zero_ivec(fc->gv.dim));
+    for(int i=0;i<3;++i) permute.set_direction(fc->gv.yucky_direction(i),i);
+    permute = S.transform_unshifted(permute,sn);
+    LOOP_OVER_DIRECTIONS(permute.dim,d)
+        permute.set_direction(d,abs(permute.in_direction(d)));
+
+    for(int i=0;i<data->rank;++i){
+        direction d=data->ds[i];
+        int isd=isS.in_direction(d), ied=ieS.in_direction(d);
+        start[i]=(std::min(isd,ied)-data->min_corner.in_direction(d))/2;
+        count[i]=abs(ied-isd)/2+1;
+        if (ied<isd) offset[permute.in_direction(d)]=count[i]-1;
+    }
+
+    for(int i=0;i<data->rank;++i){
+      direction d=data->ds[i];
+      dims[i]=(data->max_corner.in_direction(d)-data->min_corner.in_direction(d))/2+1;
+    }
+      
+    for(int i=0;i<data->rank;++i){
+        direction d=data->ds[i]; int j=permute.in_direction(d);
+        for(int k=i+1;k<data->rank;++k) stride[j]*=dims[k];
+        offset[j]*=stride[j]; if(offset[j]) stride[j]*=-1;
+    }
+    ptrdiff_t sco = start[0]*dims[1]*dims[2] + start[1]*dims[2] + start[2];
+
+    size_t slice_size = data->slice_size;         
+    realnum *slice = static_cast<realnum *>(data->vslice);
+
+    fc->gv.yee2cent_offsets(data->comp, data->off0, data->off1);
+    vec rshift(shift*(0.5*fc->gv.inva));
+
+    const realnum *Pbase = pol_ptr(fc, data->ft, data->susc_idx, data->comp);
+    if (!Pbase) return;
+
+    const realnum *Bblock = bath_base(fc, data->ft, data->susc_idx, data->comp);
+    if (!Bblock) return;
+
+    const ptrdiff_t off0_bath = data->off0 * data->num_bath;
+    const ptrdiff_t off1_bath = data->off1 * data->num_bath;
+
+    LOOP_OVER_IVECS(fc->gv, is, ie, idx) {
+
+      IVEC_LOOP_LOC(fc->gv, loc);
+      loc = S.transform(loc,sn)+rshift;
+
+      ptrdiff_t idx2 =
+                sco + ((((offset[0]+offset[1]+offset[2]) + loop_i1*stride[0])
+                        + loop_i2*stride[1]) + loop_i3*stride[2]);
+      
+      const ptrdiff_t offi = static_cast<ptrdiff_t>(idx) * data->num_bath;
+
+      for (int k = 0; k < data->num_bath; ++k) {
+        realnum val = 0.25f * ( Bblock[offi + k]
+                              + Bblock[offi + k + off0_bath]
+                              + Bblock[offi + k + off1_bath]
+                              + Bblock[offi + k + off0_bath + off1_bath] );
+
+        slice[static_cast<ptrdiff_t>(k) * data->slice_size + idx2] = val;
+      }
+    }
+}
+
+realnum *fields::get_bath_pol_array_slice(const volume &where, realnum *slice, int susc_idx,
+                                          component comp, bool snap)
+{
+    const bath_lorentzian_susceptibility *bsus = nullptr;
+
+    for (int ich = 0; ich < num_chunks && !bsus; ++ich) {   
+        fields_chunk *fc = chunks[ich];
+        for (int ft = 0; ft < NUM_FIELD_TYPES && !bsus; ++ft)
+            for (polarization_state *p = fc->pol[ft]; p; p = p->next) {
+                bsus = dynamic_cast<const bath_lorentzian_susceptibility *>(p->s);
+                if (bsus) break;
+            }
+    }
+
+    if (!bsus)
+        meep::abort("get_bath_pol_array_slice: no bath-Lorentz susceptibility found");
+
+    const int nbath = bsus->get_num_bath();
+    if (nbath <= 0)
+        meep::abort("get_bath_pol_array_slice: num_bath <= 0");
+
+    direction dir = component_direction(comp);
+    if (dir < X || dir > Z)
+        meep::abort("get_bath_pol_array_slice: component must be Ex...Ez or Hx...Hz");
+
+    size_t dims[3];   direction dirs[3];
+    pol_bath_slice_data data; // (extends array_slice_data)
+    int rank = get_array_slice_dimensions(where, dims, dirs,
+                                          false, snap, 0, &data);
+    if (rank == 0) return nullptr; // empty volume
+
+    const size_t slice_size = data.slice_size;
+    const size_t full_size  = slice_size * nbath;
+
+    if (!slice)  slice = (realnum*)calloc(full_size, sizeof(realnum));
+    else         memset(slice, 0, full_size * sizeof(realnum));
+
+    data.vslice    = slice;
+    data.ft        = E_stuff;
+    data.susc_idx  = susc_idx;
+    data.num_bath  = nbath;
+    data.comp      = comp;
+    data.rank      = rank;
+    data.off0      = data.off1 = 0;
+
+    loop_in_chunks(bath_slice_chunkloop,
+                   &data, where, Centered, true, snap);
+
+    if (!snap) {
+        slice = collapse_array(slice, &rank, dims, dirs, where, nbath); // data_size = 1
+        rank  = get_array_slice_dimensions(where, dims, dirs, true, false);
+    }
+
+    // array_to_all(slice, full_size);
+    // recompute the (possibly collapsed) spatial size
+    size_t slice_size2 = dims[0] * (rank >= 2 ? dims[1] : 1) * (rank == 3 ? dims[2] : 1);
+
+    array_to_all(slice, slice_size2 * nbath);
+
+    return slice;
 }
 
 /***************************************************************/

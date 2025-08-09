@@ -857,28 +857,29 @@ class BathLorentzianSusceptibility(LorentzianSusceptibility):
                  bath_anharmonicities=None,
                  noise_amp=0.0, **kwargs):
         """
-        num_bath: number of bath oscillators along each dimension in each spatial grid point.
+        + **`num_bath`**: number of bath oscillators along each dimension in each spatial grid point.
         When num_bath = 0, this class is reduced to **LorentzianSusceptibility**.
 
-        By default, the following more direct definiton is used:
+        By default, the following direct definiton of the bath field is used:
 
-        bath_frequencies: frequencies of bath oscillators in a Python list
-        bath_gammas: damping rate of bath oscillators in a Python list
-        bath_couplings: the coupling strengths between the bath oscillators and the polarization in a 
+        + **`bath_frequencies`**: frequencies of bath oscillators in a Python list
+        + **`bath_gammas`**: damping rate of bath oscillators in a Python list
+        + **`bath_couplings`**: the coupling strengths between the bath oscillators and the polarization in a 
         Python list.
 
-        If these variables are not defined, the following indirect way for initializing the bath degrees
+        If the above three variables are not defined, the following indirect way for initializing the bath degrees
         of freedom is given as follows.
 
-        bath_width: The frequency span of the bath oscillators. The frequencies of the bath oscillators 
+        + **`bath_width`**: The frequency span of the bath oscillators. The frequencies of the bath oscillators
         obey a uniform distribution within [omega_0 - bath_width/2, omega_0 + bath_width/2], where
         omega_0 denotes the Lorentzian frequency coupled with the EM field.
 
-        bath_form: "uniform", "lorentzian", and "gaussian" are supported. When "lorentzian" (or "gaussian") is used, 
-        each bath oscillator is coupled to the optical polarization following a Lorentzian (or Gaussian)-shape 
-        polarization-bath coupling, while the frequencies of the bath oscillators remain the uniform distribution.
+        + **`bath_form`**: **`uniform`**, **`lorentzian`**, and **`gaussian`** are supported. When
+        **`lorentzian`** (or **`gaussian`**) is used, each bath oscillator is coupled to the optical polarization
+        following a Lorentzian (or Gaussian)-shape polarization-bath coupling, while the frequencies of the bath 
+        oscillators remain the uniform distribution.
 
-        bath_gamma: The damping rate of the bath oscillators, assumed to be the same for all bath oscillators.
+        + **`bath_gamma`**: The damping rate of the bath oscillators, assumed to be the same for all bath oscillators.
 
         The other parameters of the bath oscillators are carefully chosen so that the overall susceptibility
         of the polarization density looks like a bare **LorentzianSusceptibility**.
@@ -894,13 +895,18 @@ class BathLorentzianSusceptibility(LorentzianSusceptibility):
         self.noise_amp = noise_amp
 
         # then try to apply the indirect definition
-        if num_bath >= 2 and bath_width is not None and bath_form is not None and bath_dephasing is not None and bath_gamma is not None:
+        if num_bath >= 1 and bath_width is not None and bath_form is not None and bath_dephasing is not None and bath_gamma is not None:
             # we assume the dissipation of the bath oscillators to be the same
             self.bath_gammas = [bath_gamma] * num_bath
-            bath_frequencies = np.linspace(-bath_width/2.0, bath_width/2.0, num_bath)
-            rho_omega = 1.0 / (bath_frequencies[1] - bath_frequencies[0])
-            # this k value corresponds to a uniform distribution of the bath oscillators
-            k = (2.0 / np.pi / rho_omega * bath_dephasing)**0.5
+            if num_bath == 1:
+                bath_frequencies = np.array([0.0])
+                # !!! the coupling strength when n_bath = 1 is defined casually and should be replaced with more careful calculations
+                k = (2.0 / np.pi * bath_dephasing)**0.5
+            else:
+                bath_frequencies = np.linspace(-bath_width/2.0, bath_width/2.0, num_bath)
+                rho_omega = 1.0 / (bath_frequencies[1] - bath_frequencies[0])
+                # this k value corresponds to a uniform distribution of the bath oscillators
+                k = (2.0 / np.pi / rho_omega * bath_dephasing)**0.5
             self.k = k
             if bath_form == "uniform":
                 bath_couplings = [k] * num_bath
@@ -922,7 +928,10 @@ class BathLorentzianSusceptibility(LorentzianSusceptibility):
     def obtain_independent_lorentzians(self):
         """
         Convert the coupled (bright + bath) oscillators to a set of independent (decoupled)
-        Lorentzian oscillators. We construct a state-space matrix A of dimension 2*(num_bath+1)
+        Lorentzian oscillators. The current formalism supports only when the Lorentzian oscillator and the bath 
+        oscillators have the same decay rate. 
+        
+        We construct a state-space matrix A of dimension 2*(num_bath+1)
         that represents the first-order form of the second-order differential equations:
         
           For the bright mode:
@@ -946,8 +955,8 @@ class BathLorentzianSusceptibility(LorentzianSusceptibility):
         
         Returns:
           A list of dictionaries, each with keys:
-            'frequency': resonance frequency (ω_eff)
-            'gamma': full decay rate (γ_eff)
+            'frequency': resonance frequency (\omega_{\text{eff}})
+            'gamma': full decay rate (\gamma_{\text{eff}})
             'sigma': oscillator strength (bright weight)
         """
 

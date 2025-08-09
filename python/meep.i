@@ -1866,6 +1866,12 @@ PyObject *_get_array_slice_dimensions(meep::fields *f, const meep::volume &where
         Verbosity
     )
 
+    from .molecule import (
+        DummyMolecule,
+        TLSMolecule,
+        update_multiple_molecules_with_em,
+    )
+
     if with_mpi():
         try:
             from mpi4py import MPI

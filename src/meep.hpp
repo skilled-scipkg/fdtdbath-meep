@@ -330,6 +330,8 @@ public:
     return 5 + num_bath * 4 + 2;
   }
 
+  virtual int get_num_bath() const { return num_bath; }
+
 protected:
   int num_bath;                          // Number of bath oscillators
   std::vector<realnum> bath_frequencies; // Natural frequencies for each bath oscillator
@@ -1916,6 +1918,11 @@ public:
                            field_function fun, field_rfunction rfun, void *fun_data, void *vslice,
                            double frequency = 0, bool snap = false);
 
+  // fetch and return a slice of the polarization array for the given susceptibility index
+  realnum *get_pol_array_slice(const volume &where, realnum *slice=nullptr, int susc_idx=0, component comp=Ez, bool snap=true);
+  // fetch and return a slice of the bath polarization array for the given susceptibility index
+  realnum *get_bath_pol_array_slice(const volume &where, realnum *slice=nullptr, int susc_idx=0, component comp=Ez, bool snap=true);
+  
   /* fetch and return coordinates and integration weights of grid points covered by an array slice,
    */
   /* packed into a vector with format [NX, xtics[:], NY, ytics[:], NZ, ztics[:], weights[:] ] */

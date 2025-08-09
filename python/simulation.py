@@ -2,6 +2,7 @@
 A collection of objects and helper routines for setting up the simulation.
 """
 
+import ctypes
 import functools
 import inspect
 import math
@@ -3984,6 +3985,162 @@ class Simulation:
             self.fields.get_array_slice(v, component, arr, frequency, snap)
 
         return arr
+
+    def get_pol_array(
+        self,
+        component: int = None,
+        susc_idx: int = None,
+        vol: Volume = None,
+        center: Vector3Type = None,
+        size: Vector3Type = None,
+        cmplx: bool = False,
+        snap: bool = True
+    ):
+        """
+        Returns a slice of the material polarization fields over a subregion of the cell at the
+        current simulation time as a NumPy array. The materials/fields are centered on the Yee-grid voxels
+        using a bilinear interpolation of the nearest Yee-grid points.
+
+        + **`component` [ `component` constant ]** — The field component (e.g., `meep.Ex`,
+          `meep.Hy`, etc) of the array data. No default.
+        
+        + **`susc_idx` [ `int` ]** — The index of the susceptibility to obtain the polarization (default is 0 if None).
+
+        + **`vol` [ `Volume` ]** — The rectilinear subregion/slice of the cell volume.
+          The return value of `get_array` has the same dimensions as the `Volume`'s `size`
+          attribute. If `None` (default), then `size` and `center` will be examined. 
+          If Both are `None`, the entire cell volume is used.
+
+        + **`center`, `size` [ `Vector3` ]** — If both are specified, the method will construct
+          an appropriate `Volume`. This is a convenience feature and alternative to
+          supplying a `Volume`. If `None`, the entire cell volume is used.
+
+        + **`cmplx` [ `boolean` ]** — If `True`, return complex-valued data otherwise return
+          real-valued data (default).
+
+        + **`snap` [ `boolean` ]** — Empty dimensions of the grid slice are "collapsed"
+          into a single element. However, if `snap` is set to `True`, this
+          interpolation behavior is disabled and the grid slice is instead "snapped"
+          everywhere to the nearest grid point. (Empty slice dimensions are still of size
+          one.) This feature is mainly useful for comparing results with the
+          [`output_` routines](#output-functions) (e.g., `output_epsilon`, `output_efield_z`, etc.).
+        """
+        if component is None:
+            raise ValueError("component is required")
+        if isinstance(component, mp.Volume) or isinstance(component, mp.volume):
+            raise ValueError("The first argument must be the component")
+        
+        if susc_idx is None:
+            susc_idx = 0
+
+        if snap is False:
+            raise Warning("Setting snap=False yields wrong results for 1D simulations")
+
+        dim_sizes = np.zeros(3, dtype=np.uintp)
+        if vol is None and center is None and size is None:
+            v = self.fields.total_volume()
+        else:
+            v = self._volume_from_kwargs(vol, center, size)
+        
+        _, dirs = mp._get_array_slice_dimensions(
+            self.fields, v, dim_sizes, not snap, snap
+        )
+
+        dims = [s for s in dim_sizes if s != 0]
+
+        print("dims in Python simulation.py", dims)
+
+        if cmplx is True:
+            raise Warning("Complex polarization arrays are not tested yet, the results may be inaccurate.")
+
+        if mp.is_single_precision():
+            arr = np.zeros(dims, dtype=np.complex64 if cmplx else np.float32)
+        else:
+            arr = np.zeros(dims, dtype=np.complex128 if cmplx else np.float64)
+
+        self.fields.get_pol_array_slice(v, arr, susc_idx, component, snap)
+
+        return arr
+
+    def get_bath_pol_array(
+        self,
+        nbath: int = None,
+        component: int = None,
+        susc_idx: int = None,
+        vol: Volume = None,
+        center: Vector3Type = None,
+        size: Vector3Type = None,
+        cmplx: bool = False,
+        snap: bool = True):
+        """
+        Returns a slice of the material auxiliary bath fields over a subregion of the cell at the
+        current simulation time as a NumPy array. The materials/fields are centered on the Yee-grid voxels
+        using a bilinear interpolation of the nearest Yee-grid points.
+
+        + **`component` [ `component` constant ]** — The field component (e.g., `meep.Ex`,
+          `meep.Hy`, etc) of the array data. No default.
+        
+        + **`susc_idx` [ `int` ]** — The index of the susceptibility to obtain the polarization (default is 0 if None).
+
+        + **`vol` [ `Volume` ]** — The rectilinear subregion/slice of the cell volume.
+          The return value of `get_array` has the same dimensions as the `Volume`'s `size`
+          attribute. If `None` (default), then `size` and `center` will be examined. 
+          If Both are `None`, the entire cell volume is used.
+
+        + **`center`, `size` [ `Vector3` ]** — If both are specified, the method will construct
+          an appropriate `Volume`. This is a convenience feature and alternative to
+          supplying a `Volume`. If `None`, the entire cell volume is used.
+
+        + **`cmplx` [ `boolean` ]** — If `True`, return complex-valued data otherwise return
+          real-valued data (default).
+
+        + **`snap` [ `boolean` ]** — Empty dimensions of the grid slice are "collapsed"
+          into a single element. However, if `snap` is set to `True`, this
+          interpolation behavior is disabled and the grid slice is instead "snapped"
+          everywhere to the nearest grid point. (Empty slice dimensions are still of size
+          one.) This feature is mainly useful for comparing results with the
+          [`output_` routines](#output-functions) (e.g., `output_epsilon`, `output_efield_z`, etc.).
+        """
+        if nbath is None:
+            raise ValueError("nbath is required and must match that of the BathLorentzian susceptibility")
+
+        if nbath < 1:
+            raise ValueError("nbath must be greater or equal than 1 for bath polarization array")
+        
+        if component is None:
+            raise ValueError("component is required")
+        
+        if susc_idx is None:
+            susc_idx = 0
+
+        if snap is False:
+            raise Warning("Setting snap=False yields wrong results for 1D simulations")
+
+        dim_sizes = np.zeros(3, dtype=np.uintp)
+        if vol is None and center is None and size is None:
+            v = self.fields.total_volume()
+        else:
+            v = self._volume_from_kwargs(vol, center, size)
+        
+        _, dirs = mp._get_array_slice_dimensions(
+            self.fields, v, dim_sizes, not snap, snap
+        )
+
+        dims = [s for s in dim_sizes if s != 0]
+        # The first index is the bath index, so we prepend it
+        dims = [nbath] + dims
+
+        if cmplx is True:
+            raise Warning("Complex polarization arrays are not tested yet, the results may be inaccurate.")
+
+        if mp.is_single_precision():
+            arr = np.zeros(dims, dtype=np.complex64 if cmplx else np.float32)
+        else:
+            arr = np.zeros(dims, dtype=np.complex128 if cmplx else np.float64)
+       
+        self.fields.get_bath_pol_array_slice(v, arr, susc_idx, component, snap)
+        return arr
+    
 
     def get_dft_array(
         self,
