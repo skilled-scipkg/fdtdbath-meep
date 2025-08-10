@@ -1030,6 +1030,43 @@ class BathLorentzianSusceptibility(LorentzianSusceptibility):
         print(len(independent_oscillators), " independent Lorentzian modes are included in the simulations")
         return independent_oscillators
 
+    def bath_potential_energy_distribution(
+        self,
+        bath_array: np.ndarray = None,
+        indexes: Optional[List[int]] = None
+        ):
+        """
+        Returns the summed potential energy distribution among many bath oscillators. 
+
+        + **`bath_array` [ `np.ndarray` constant ]** — The calculated bath_array from the mp.Simulation.get_bath_pol_array()
+          function. This function will use the bath oscillators defined here to analyze the energy distribution.
+        
+        + **`indexes` [ `List[int]` ]** — The indexes of the bath oscillators to analyze. If None, all bath oscillators
+          will be analyzed. If specified, only the bath oscillators at these indexes will be analyzed.
+        """
+        if bath_array is None:
+            raise ValueError("bath_array must be provided to analyze the bath energy distributions.")
+
+        if indexes is None:
+            indexes = list(range(self.num_bath))
+        indexes = np.array(indexes, dtype=int)
+
+        if not all(0 <= idx < self.num_bath for idx in indexes):
+            raise ValueError("All indexes must be within the range of defined bath oscillators.")
+
+        # potential energy of all involved bath oscillators is given by:
+        # E = 1/2 * rho * omega_j^2 * Y_j^2
+        # where rho = 1 / (epsilon_0 * sigma(r) * omega_0^2) is the effective mass density of the bath oscillators
+        # note that the kinetic energy is not stored directly, so we only compute the potential energy
+        # the idea is that if the number of bath oscillators is large enough, the kinetic energy averages out to the potential energy
+        # in MEEP inputs, all the frequencies are lacking of the factor 2 * pi, so we need to multiply it here 
+        sigma = self.sigma_diag[0]
+        omega_0 = self.frequency * np.pi * 2.0
+        bath_omega = np.array(self.bath_frequencies)[indexes] * np.pi * 2.0
+        rho = 1.0 / (sigma * omega_0**2)
+        energy = 0.5 * rho * np.einsum("i,i...->...", bath_omega**2, bath_array[indexes]**2)
+        return energy
+
 class NoisyDrudeSusceptibility(DrudeSusceptibility):
     """
     Specifies a single dispersive susceptibility of Lorentzian (damped harmonic
