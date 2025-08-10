@@ -1,12 +1,6 @@
 '''
 This Python module defines realistic molecules coupled with the MEEP FDTD engine.
 
-Plan: 
-
-1. Use simple RT-TDDFT molecular class to study plasmon-molecule collective strong coupling with PySCF.
-2. Implement RT-TDDFT-Ehrenfest dynamics class to study plasmon-molecule dynamics with PySCF.
-3. Implement the socket interface to enable large-scale calculations across multiple nodes (such as enabling hundreds molecules).
-
 The important issue is that we plan to propagate molecules under atomic units, while MEEP uses its own unit system.
 '''
 
@@ -322,16 +316,12 @@ class TLSMolecule(DummyMolecule):
 
 class SocketMolecule(DummyMolecule):
     """
-    The idea of this molecule class is to enable large-scale calculations across multiple nodes. The MEEP code
-    for EM simulations stays in the main process (which enables MPI calculations within MEEP), while
-    it uses a socket interface to communicate with multiple servers that manage the molecular dynamics calculations
-    separately. The interactions between different molecules are propagated entirely through the EM field, which is calculated by MEEP.
-    Within this class, no explicit molecular dynamics or electronic dynamics are calculated. 
+    TBD
     """
 
     def __init__(self, resolution, center=mp.Vector3(), size=mp.Vector3(1, 1, 1), dimensions=2, sigma=1.0):
         """
-        Initialize the Socket molecule and pre
+        Initialize the Socket molecule
         """
         super().__init__(dt=0.5 / resolution, dx=1.0 / resolution, center=center, size=size)
         self.dimensions = dimensions
@@ -347,7 +337,7 @@ class SocketMolecule(DummyMolecule):
 
     def _init_sources(self):
         """ 
-        Initialize the sources for the RT-TDDFT molecule.
+        Initialize the sources for the molecule.
         This method sets up the polarization profile based on the molecule's properties.
 
         For general purposes, each molecule contains three polarization directions (Ex, Ey, Ez) in 3D or one polarization direction (Ez) in 2D.
@@ -387,4 +377,4 @@ class SocketMolecule(DummyMolecule):
                                                   amplitude=0.0,
                                                   amp_func=amp_func_3d_z)]
         else:
-            raise ValueError("RT-TDDFTMolecule only supports 2D and 3D simulations. Please use dimensions=2 or dimensions=3.")
+            raise ValueError("Socket Molecule only supports 2D and 3D simulations. Please use dimensions=2 or dimensions=3.")
