@@ -5089,6 +5089,74 @@ class Simulation:
         vis.visualize_chunks(self)
 
 
+class SimulationWithMolecules(Simulation):
+    def __init__(self, *args, molecules=None, **kwargs):
+        """
+        A subclass of `Simulation` that includes support for molecules.
+
+        Parameters:
+            molecules: a list of `Molecule` objects to include in the simulation.
+        """
+        if molecules is None:
+            self.molecules = []
+        else:
+            self.molecules = molecules
+
+        super().__init__(*args, **kwargs)
+
+        self.sources_non_molecule = list(self.sources)
+
+    def run(self, *step_funcs, **kwargs):
+        """
+        `run(step_functions..., until=condition/time)`  ##sig-keep
+
+        Run the simulation until a certain time or condition, calling the given step
+        functions (if any) at each timestep. The keyword argument `until` is *either* a
+        number, in which case it is an additional time (in Meep units) to run for, *or* it
+        is a function (of no arguments) which returns `True` when the simulation should
+        stop. `until` can also be a list of stopping conditions which may include a number
+        of additional functions.
+
+        `run(step_functions..., until_after_sources=condition/time)`  ##sig-keep
+
+        Run the simulation until all sources have turned off, calling the given step
+        functions (if any) at each timestep. The keyword argument `until_after_sources` is
+        either a number, in which case it is an *additional* time (in Meep units) to run
+        for after the sources are off, *or* it is a function (of no arguments). In the
+        latter case, the simulation runs until the sources are off *and* `condition`
+        returns `True`. Like `until` above, `until_after_sources` can take a list of
+        stopping conditions.
+        """
+        until = kwargs.pop("until", None)
+        until_after_sources = kwargs.pop("until_after_sources", None)
+
+        if self.fields is None:
+            self.init_sim()
+
+        self._evaluate_dft_objects()
+        self._check_material_frequencies()
+
+        if kwargs:
+            raise ValueError(f"Unrecognized keyword arguments: {kwargs.keys()}")
+        
+        # define an inline step function
+        def __step_function__(sim):
+            sources = list(self.sources_non_molecule)
+            for molecule in self.molecules:
+                int_ep = molecule._calculate_ep_integral(sim)
+                molecule._propagate(int_ep)
+                molecule._update_source_amplitude()
+                sources.extend(molecule.sources)
+            sim.change_sources(sources)
+
+        step_funcs += (__step_function__,)
+        if until_after_sources is not None:
+            self._run_sources_until(until_after_sources, step_funcs)
+        elif until is not None:
+            self._run_until(until, step_funcs)
+        else:
+            raise ValueError("Invalid run configuration")
+
 def _create_boundary_region_from_boundary_layers(boundary_layers, gv):
     br = mp.boundary_region()
 

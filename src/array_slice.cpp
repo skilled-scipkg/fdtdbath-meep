@@ -84,7 +84,7 @@ pol_ptr(const fields_chunk *fc, field_type ft, int susc_idx, component c)
     /* Skip the two size_t scalars to reach the P-pointer table */
     auto **Parray = reinterpret_cast<realnum **>(
                         static_cast<char *>(p->data) + 2*sizeof(std::size_t));
-    /* cmp = 0 → real part, cmp = 1 → imag part */
+    /* cmp = 0 -> real part, cmp = 1 -> imag part */
     return Parray[2 * static_cast<int>(c)];  // real part of P_c
 }
 
