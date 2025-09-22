@@ -16,7 +16,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/src -DDATADIR=\"$(srcdir)/\"
 
 .SUFFIXES = .dac .done
 
-check_PROGRAMS = aniso_disp bench bragg_transmission convergence_cyl_waveguide cylindrical dump_load flux harmonics integrate known_results near2far one_dimensional physical stress_tensor symmetry three_d two_dimensional 2D_convergence h5test pml pw-source-ll ring-ll cyl-ellipsoid-ll absorber-1d-ll array-slice-ll user-defined-material dft-fields gdsII-3d bend-flux-ll array-metadata
+check_PROGRAMS = aniso_disp bench bragg_transmission convergence_cyl_waveguide cylindrical dump_load flux harmonics integrate known_results near2far one_dimensional physical stress_tensor symmetry three_d two_dimensional 2D_convergence h5test pml pw-source-ll cyl-ellipsoid-ll absorber-1d-ll array-slice-ll user-defined-material dft-fields gdsII-3d bend-flux-ll array-metadata
 
 array_metadata_SOURCES = array-metadata.cpp
 array_metadata_LDADD   = $(MEEPLIBS)
@@ -90,9 +90,6 @@ cyl_ellipsoid_ll_LDADD   = $(MEEPLIBS)
 pw_source_ll_SOURCES = pw-source-ll.cpp
 pw_source_ll_LDADD   = $(MEEPLIBS)
 
-ring_ll_SOURCES = ring-ll.cpp
-ring_ll_LDADD   = $(MEEPLIBS)
-
 array_slice_ll_SOURCES = array-slice-ll.cpp
 array_slice_ll_LDADD   = $(MEEPLIBS)
 
@@ -115,7 +112,7 @@ TESTS = aniso_disp bench bragg_transmission convergence_cyl_waveguide cylindrica
 if WITH_MPI
   LOG_COMPILER = $(RUNCODE)
 else
-  TESTS += cyl-ellipsoid-ll array-slice-ll ring-ll
+  TESTS += cyl-ellipsoid-ll array-slice-ll
 endif
 
 # Note: this requires GNU make
