@@ -1,0 +1,422 @@
+{
+  "compile_memory_path": "skills/.evidence/memory.md",
+  "compiled_package_id": "fdtdbath-meep",
+  "evidence": {
+    "core_skills": [
+      "meep-inputs-and-modeling",
+      "meep-build-and-install",
+      "meep-simulation-workflows",
+      "meep-api-and-scripting",
+      "meep-getting-started",
+      "meep-examples-and-tutorials"
+    ],
+    "evidence_dir": "skills/.evidence",
+    "files": [
+      "skills/.evidence/meep-inputs-and-modeling.md",
+      "skills/.evidence/meep-build-and-install.md",
+      "skills/.evidence/meep-simulation-workflows.md",
+      "skills/.evidence/meep-api-and-scripting.md",
+      "skills/.evidence/meep-getting-started.md",
+      "skills/.evidence/meep-examples-and-tutorials.md"
+    ]
+  },
+  "generation": {
+    "docs_only": false,
+    "generator_script": "sci-skills-generator/scripts/generate_skills_folder.py",
+    "max_skills": 30,
+    "return_code": 0,
+    "status": "ok"
+  },
+  "mode": "compile",
+  "pass_scope_diffs": {
+    "pass_2": {
+      "added": [
+        "skills/meep-advanced-topics/SKILL.md",
+        "skills/meep-advanced-topics/references/doc_map.md",
+        "skills/meep-advanced-topics/references/source_map.md"
+      ],
+      "changed": [
+        "skills/meep-2d-cell-special-kz/SKILL.md",
+        "skills/meep-2d-cell-special-kz/references/doc_map.md",
+        "skills/meep-2d-cell-special-kz/references/source_map.md",
+        "skills/meep-acknowledgements/SKILL.md",
+        "skills/meep-acknowledgements/references/doc_map.md",
+        "skills/meep-acknowledgements/references/source_map.md",
+        "skills/meep-advanced-topics/SKILL.md",
+        "skills/meep-advanced-topics/references/doc_map.md",
+        "skills/meep-advanced-topics/references/source_map.md",
+        "skills/meep-api-and-scripting/SKILL.md",
+        "skills/meep-build-and-install/SKILL.md",
+        "skills/meep-examples-and-tutorials/SKILL.md",
+        "skills/meep-exploiting-symmetry/SKILL.md",
+        "skills/meep-exploiting-symmetry/references/doc_map.md",
+        "skills/meep-exploiting-symmetry/references/source_map.md",
+        "skills/meep-getting-started/SKILL.md",
+        "skills/meep-guile-and-scheme-information/SKILL.md",
+        "skills/meep-guile-and-scheme-information/references/doc_map.md",
+        "skills/meep-guile-and-scheme-information/references/source_map.md",
+        "skills/meep-index/SKILL.md",
+        "skills/meep-inputs-and-modeling/SKILL.md",
+        "skills/meep-license-and-copyright/SKILL.md",
+        "skills/meep-license-and-copyright/references/doc_map.md",
+        "skills/meep-license-and-copyright/references/source_map.md",
+        "skills/meep-perfectly-matched-layer/SKILL.md",
+        "skills/meep-perfectly-matched-layer/references/doc_map.md",
+        "skills/meep-perfectly-matched-layer/references/source_map.md",
+        "skills/meep-requirements/SKILL.md",
+        "skills/meep-requirements/references/doc_map.md",
+        "skills/meep-requirements/references/source_map.md",
+        "skills/meep-simulation-workflows/SKILL.md",
+        "skills/meep-theory-and-methods/SKILL.md",
+        "skills/meep-theory-and-methods/references/doc_map.md",
+        "skills/meep-theory-and-methods/references/source_map.md",
+        "skills/meep-units-and-nonlinearity/SKILL.md",
+        "skills/meep-units-and-nonlinearity/references/doc_map.md",
+        "skills/meep-units-and-nonlinearity/references/source_map.md",
+        "skills/meep-yee-lattice/SKILL.md",
+        "skills/meep-yee-lattice/references/doc_map.md",
+        "skills/meep-yee-lattice/references/source_map.md"
+      ],
+      "deleted": [
+        "skills/meep-2d-cell-special-kz/SKILL.md",
+        "skills/meep-2d-cell-special-kz/references/doc_map.md",
+        "skills/meep-2d-cell-special-kz/references/source_map.md",
+        "skills/meep-acknowledgements/SKILL.md",
+        "skills/meep-acknowledgements/references/doc_map.md",
+        "skills/meep-acknowledgements/references/source_map.md",
+        "skills/meep-exploiting-symmetry/SKILL.md",
+        "skills/meep-exploiting-symmetry/references/doc_map.md",
+        "skills/meep-exploiting-symmetry/references/source_map.md",
+        "skills/meep-guile-and-scheme-information/SKILL.md",
+        "skills/meep-guile-and-scheme-information/references/doc_map.md",
+        "skills/meep-guile-and-scheme-information/references/source_map.md",
+        "skills/meep-license-and-copyright/SKILL.md",
+        "skills/meep-license-and-copyright/references/doc_map.md",
+        "skills/meep-license-and-copyright/references/source_map.md",
+        "skills/meep-perfectly-matched-layer/SKILL.md",
+        "skills/meep-perfectly-matched-layer/references/doc_map.md",
+        "skills/meep-perfectly-matched-layer/references/source_map.md",
+        "skills/meep-requirements/SKILL.md",
+        "skills/meep-requirements/references/doc_map.md",
+        "skills/meep-requirements/references/source_map.md",
+        "skills/meep-theory-and-methods/SKILL.md",
+        "skills/meep-theory-and-methods/references/doc_map.md",
+        "skills/meep-theory-and-methods/references/source_map.md",
+        "skills/meep-units-and-nonlinearity/SKILL.md",
+        "skills/meep-units-and-nonlinearity/references/doc_map.md",
+        "skills/meep-units-and-nonlinearity/references/source_map.md",
+        "skills/meep-yee-lattice/SKILL.md",
+        "skills/meep-yee-lattice/references/doc_map.md",
+        "skills/meep-yee-lattice/references/source_map.md"
+      ],
+      "modified": [
+        "skills/meep-api-and-scripting/SKILL.md",
+        "skills/meep-build-and-install/SKILL.md",
+        "skills/meep-examples-and-tutorials/SKILL.md",
+        "skills/meep-getting-started/SKILL.md",
+        "skills/meep-index/SKILL.md",
+        "skills/meep-inputs-and-modeling/SKILL.md",
+        "skills/meep-simulation-workflows/SKILL.md"
+      ]
+    },
+    "pass_3": {
+      "added": [
+        "skills/.compile_report.json",
+        "skills/.evidence/memory.md"
+      ],
+      "changed": [
+        "skills/.compile_report.json",
+        "skills/.evidence/memory.md",
+        "skills/meep-advanced-topics/SKILL.md",
+        "skills/meep-advanced-topics/references/doc_map.md",
+        "skills/meep-advanced-topics/references/source_map.md",
+        "skills/meep-api-and-scripting/SKILL.md",
+        "skills/meep-api-and-scripting/references/doc_map.md",
+        "skills/meep-api-and-scripting/references/source_map.md",
+        "skills/meep-build-and-install/SKILL.md",
+        "skills/meep-build-and-install/references/doc_map.md",
+        "skills/meep-build-and-install/references/source_map.md",
+        "skills/meep-examples-and-tutorials/SKILL.md",
+        "skills/meep-examples-and-tutorials/references/doc_map.md",
+        "skills/meep-examples-and-tutorials/references/source_map.md",
+        "skills/meep-getting-started/SKILL.md",
+        "skills/meep-getting-started/references/doc_map.md",
+        "skills/meep-getting-started/references/source_map.md",
+        "skills/meep-index/SKILL.md",
+        "skills/meep-inputs-and-modeling/SKILL.md",
+        "skills/meep-inputs-and-modeling/references/doc_map.md",
+        "skills/meep-inputs-and-modeling/references/source_map.md",
+        "skills/meep-simulation-workflows/SKILL.md",
+        "skills/meep-simulation-workflows/references/doc_map.md",
+        "skills/meep-simulation-workflows/references/source_map.md"
+      ],
+      "deleted": [],
+      "modified": [
+        "skills/meep-advanced-topics/SKILL.md",
+        "skills/meep-advanced-topics/references/doc_map.md",
+        "skills/meep-advanced-topics/references/source_map.md",
+        "skills/meep-api-and-scripting/SKILL.md",
+        "skills/meep-api-and-scripting/references/doc_map.md",
+        "skills/meep-api-and-scripting/references/source_map.md",
+        "skills/meep-build-and-install/SKILL.md",
+        "skills/meep-build-and-install/references/doc_map.md",
+        "skills/meep-build-and-install/references/source_map.md",
+        "skills/meep-examples-and-tutorials/SKILL.md",
+        "skills/meep-examples-and-tutorials/references/doc_map.md",
+        "skills/meep-examples-and-tutorials/references/source_map.md",
+        "skills/meep-getting-started/SKILL.md",
+        "skills/meep-getting-started/references/doc_map.md",
+        "skills/meep-getting-started/references/source_map.md",
+        "skills/meep-index/SKILL.md",
+        "skills/meep-inputs-and-modeling/SKILL.md",
+        "skills/meep-inputs-and-modeling/references/doc_map.md",
+        "skills/meep-inputs-and-modeling/references/source_map.md",
+        "skills/meep-simulation-workflows/SKILL.md",
+        "skills/meep-simulation-workflows/references/doc_map.md",
+        "skills/meep-simulation-workflows/references/source_map.md"
+      ]
+    }
+  },
+  "passes": [
+    {
+      "pass": 1,
+      "return_code": 0,
+      "status": "ok"
+    },
+    {
+      "pass": 2,
+      "return_code": 0,
+      "status": "ok"
+    },
+    {
+      "pass": 3,
+      "return_code": 0,
+      "status": "ok"
+    }
+  ],
+  "profile": {
+    "docs_dirs": [
+      "doc"
+    ],
+    "docs_only": false,
+    "notes": [
+      "Project metadata identifies package name as Meep (codemeta.json).",
+      "Dry-run generation was validated using explicit docs/tutorial/test/source roots for deterministic behavior.",
+      "Generator syntax was minimally patched in this pass to replace invalid f-string newline joins."
+    ],
+    "package_name": "meep",
+    "profile_path": "skills/.compile_profile.json",
+    "profile_source": "file",
+    "source_dirs": [
+      "libpympb",
+      "python",
+      "scheme",
+      "src"
+    ],
+    "test_dirs": [
+      "python/tests",
+      "tests"
+    ],
+    "tutorial_dirs": [
+      "doc/docs/Python_Tutorials",
+      "doc/docs/Scheme_Tutorials",
+      "python/examples",
+      "scheme/examples"
+    ],
+    "warnings": []
+  },
+  "project_root": "/mnt/home/taoeli/fermilink_repos/.fermilink-auto-compile/fdtdbath-meep",
+  "run_id": "compile_20260223T022620170061Z",
+  "skill_plan": {
+    "available_skill_ids": [
+      "meep-2d-cell-special-kz",
+      "meep-acknowledgements",
+      "meep-api-and-scripting",
+      "meep-build-and-install",
+      "meep-examples-and-tutorials",
+      "meep-exploiting-symmetry",
+      "meep-getting-started",
+      "meep-guile-and-scheme-information",
+      "meep-index",
+      "meep-inputs-and-modeling",
+      "meep-license-and-copyright",
+      "meep-perfectly-matched-layer",
+      "meep-requirements",
+      "meep-simulation-workflows",
+      "meep-theory-and-methods",
+      "meep-units-and-nonlinearity",
+      "meep-yee-lattice"
+    ],
+    "core_skill_ids": [
+      "meep-inputs-and-modeling",
+      "meep-build-and-install",
+      "meep-simulation-workflows",
+      "meep-api-and-scripting",
+      "meep-getting-started",
+      "meep-examples-and-tutorials"
+    ],
+    "deferred_gaps": [
+      "Confirm whether top-level Markdown docs (README.md, NEWS.md, index.md) should be included in later explicit docs roots.",
+      "After generation, merge one-doc tail topics (for example symmetry/license/theory singletons) into a single advanced-topics skill if routing becomes noisy.",
+      "Validate that Parallel/HPC guidance is surfaced in either a dedicated skill or within simulation-workflows with clear MPI-focused routing."
+    ],
+    "goal": "Passes 2/3 should generate Meep skills, enrich core docs-first playbooks, and audit routing coverage.",
+    "mode": "compile",
+    "priority_skills": [
+      {
+        "action": "create",
+        "must_cover": [
+          "docs-first routing policy",
+          "topic-to-skill dispatch for build, tutorials, API, and workflows",
+          "source-escalation triggers only when docs are insufficient"
+        ],
+        "reason": "Index routing is the control point for directing all user intents to the right topic skill.",
+        "skill_id": "meep-index",
+        "source_hints": [
+          "doc/docs/index.md",
+          "README.md",
+          "skills/.compile_profile.json"
+        ]
+      },
+      {
+        "action": "create",
+        "must_cover": [
+          "first-run workflow in Python and Scheme",
+          "core concepts and units",
+          "minimal runnable tutorial references"
+        ],
+        "reason": "New-user onboarding and first simulation questions are high-frequency and need compact playbooks.",
+        "skill_id": "meep-getting-started",
+        "source_hints": [
+          "doc/docs/Introduction.md",
+          "doc/docs/Python_Tutorials/Basics.md",
+          "doc/docs/Scheme_Tutorials/Basics.md"
+        ]
+      },
+      {
+        "action": "create",
+        "must_cover": [
+          "conda/source build paths",
+          "dependency and platform caveats",
+          "verification steps after install"
+        ],
+        "reason": "Installation/build issues are common blockers and should be solved from canonical docs and build scripts.",
+        "skill_id": "meep-build-and-install",
+        "source_hints": [
+          "doc/docs/Installation.md",
+          "doc/docs/Build_From_Source.md",
+          "configure.ac",
+          "python/setup.py"
+        ]
+      },
+      {
+        "action": "create",
+        "must_cover": [
+          "geometry/material/source/monitor setup flow",
+          "runtime/termination/convergence checks",
+          "output interpretation hooks"
+        ],
+        "reason": "Simulation setup/run/analysis flow spans most user tasks and benefits from one concise canonical workflow.",
+        "skill_id": "meep-simulation-workflows",
+        "source_hints": [
+          "doc/docs/Python_User_Interface.md",
+          "doc/docs/Field_Functions.md",
+          "src/fields.cpp",
+          "src/step.cpp"
+        ]
+      },
+      {
+        "action": "create",
+        "must_cover": [
+          "Python API entry points",
+          "Scheme control-file usage and interoperability",
+          "symbol lookup strategy for unresolved API details"
+        ],
+        "reason": "Python/Scheme/C++ interface usage needs clear routing to the right API surface and examples.",
+        "skill_id": "meep-api-and-scripting",
+        "source_hints": [
+          "python/",
+          "scheme/meep.scm.in",
+          "doc/docs/Python_User_Interface.md",
+          "doc/docs/Scheme_User_Interface.md"
+        ]
+      },
+      {
+        "action": "create",
+        "must_cover": [
+          "Python example map by problem type",
+          "Scheme example map by problem type",
+          "how to choose a minimal reference example"
+        ],
+        "reason": "Examples are the fastest path to reproducible user outcomes and should be cross-linked from docs.",
+        "skill_id": "meep-examples-and-tutorials",
+        "source_hints": [
+          "python/examples",
+          "scheme/examples",
+          "doc/docs/Python_Tutorials",
+          "doc/docs/Scheme_Tutorials"
+        ]
+      },
+      {
+        "action": "audit",
+        "must_cover": [
+          "one-doc topic consolidation into advanced-topics",
+          "doc_map/source_map completeness checks",
+          "max-skills cap and naming consistency"
+        ],
+        "reason": "Pass 3 must verify topic quality and collapse low-signal one-doc topics to reduce routing noise.",
+        "skill_id": "compile-audit-doc-source-coverage",
+        "source_hints": [
+          "skills/",
+          "sci-skills-generator/references/generation-rubric.md",
+          "sci-skills-generator/SKILL.md"
+        ]
+      }
+    ],
+    "version": 1,
+    "warnings": []
+  },
+  "skill_plan_path": "skills/.evidence/skill_plan.json",
+  "validation": {
+    "core_skills_checked": [
+      "meep-simulation-workflows",
+      "meep-inputs-and-modeling",
+      "meep-getting-started",
+      "meep-examples-and-tutorials",
+      "meep-build-and-install",
+      "meep-api-and-scripting"
+    ],
+    "docs_only": false,
+    "errors": [
+      "/mnt/home/taoeli/fermilink_repos/.fermilink-auto-compile/fdtdbath-meep/skills/meep-simulation-workflows/SKILL.md: playbook missing required element containing 'convergence/validation'.",
+      "/mnt/home/taoeli/fermilink_repos/.fermilink-auto-compile/fdtdbath-meep/skills/meep-inputs-and-modeling/SKILL.md: playbook missing required element containing 'convergence/validation'.",
+      "/mnt/home/taoeli/fermilink_repos/.fermilink-auto-compile/fdtdbath-meep/skills/meep-getting-started/SKILL.md: playbook missing required element containing 'convergence/validation'.",
+      "/mnt/home/taoeli/fermilink_repos/.fermilink-auto-compile/fdtdbath-meep/skills/meep-examples-and-tutorials/SKILL.md: playbook missing required element containing 'convergence/validation'.",
+      "/mnt/home/taoeli/fermilink_repos/.fermilink-auto-compile/fdtdbath-meep/skills/meep-build-and-install/SKILL.md: playbook missing required element containing 'convergence/validation'.",
+      "/mnt/home/taoeli/fermilink_repos/.fermilink-auto-compile/fdtdbath-meep/skills/meep-api-and-scripting/SKILL.md: playbook missing required element containing 'convergence/validation'.",
+      "skill plan target missing from generated skills/: compile-audit-doc-source-coverage"
+    ],
+    "index_skills": [
+      "meep-index"
+    ],
+    "missing_planned_skills": [
+      "compile-audit-doc-source-coverage"
+    ],
+    "ok": false,
+    "planned_skill_ids": [
+      "meep-index",
+      "meep-getting-started",
+      "meep-build-and-install",
+      "meep-simulation-workflows",
+      "meep-api-and-scripting",
+      "meep-examples-and-tutorials",
+      "compile-audit-doc-source-coverage"
+    ],
+    "previous_source_inventory": {},
+    "skills_total": 8,
+    "source_inventory": {},
+    "source_links_total": 54,
+    "topic_skills": 7,
+    "warnings": []
+  }
+}

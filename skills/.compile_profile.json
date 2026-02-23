@@ -1,0 +1,32 @@
+{
+  "docs_dirs": [
+    "doc"
+  ],
+  "docs_only": false,
+  "notes": [
+    "Refreshed on 2026-02-23 for FermiLink recompile pass 1/3 (paper plan generation).",
+    "Compile memory was read first from skills/.evidence/memory.md; prior gaps were aligned by enforcing explicit per-figure validation/acceptance checks in paper_plan.json.",
+    "Repository layout was rediscovered: core Meep sources (src, python, scheme, libpympb), docs/tutorials (doc/docs, python/examples, scheme/examples), tests (tests, python/tests), and compile artifacts (skills/.evidence).",
+    "Paper-context data source was verified at /mnt/home/taoeli/fermilink_repos/fdtdbath-publications/fdtd_bath with implementation assets under implementation_2025 and installation workflows in installation_scripts/meep_install_CentOS9.sh and installation_scripts/meep_install_hpc_anvil.sh."
+  ],
+  "package_name": "fdtdbath-meep",
+  "profile_path": "skills/.compile_profile.json",
+  "profile_source": "file",
+  "source_dirs": [
+    "src",
+    "python",
+    "scheme",
+    "libpympb"
+  ],
+  "test_dirs": [
+    "tests",
+    "python/tests"
+  ],
+  "tutorial_dirs": [
+    "doc/docs/Python_Tutorials",
+    "doc/docs/Scheme_Tutorials",
+    "python/examples",
+    "scheme/examples"
+  ],
+  "warnings": []
+}
