@@ -1,9 +1,11 @@
 ---
 name: meep-index
-description: Use this skill as the docs-first router for all Meep requests. Classify intent into a topic skill first (getting started, build/install, modeling, workflows, API/scripting, examples, advanced topics, or FDTD-Bath implementation tracing) and escalate to source only when topic docs are insufficient.
+description: Use this skill as the docs-first router for all requests in this modified Meep repository (includes Lorentz-Bath/FDTD-Bath support for condensed-phase polaritons). Classify intent into a topic skill first (getting started, build/install, modeling, workflows, API/scripting, examples, advanced topics, or FDTD-Bath implementation tracing) and escalate to source only when topic docs are insufficient.
 ---
 
 # meep Skills Index
+
+Repository note: all routed skills in this folder target a modified Meep codebase with Lorentz-Bath/FDTD-Bath extensions for condensed-phase polaritons.
 
 ## Route the request
 - Classify the request into one topic skill below before answering deeply.
@@ -12,7 +14,7 @@ description: Use this skill as the docs-first router for all Meep requests. Clas
 
 ## Topic skill dispatch
 - `meep-getting-started`: first-run onboarding, units, and minimal Python/Scheme simulations.
-- `meep-build-and-install`: Conda/source build paths, dependencies, platform caveats, and validation.
+- `meep-build-and-install`: `pymeep-fdtdbath` Conda install path (`tel-research` + `conda-forge`), plus source-build fallback, dependencies, platform caveats, and validation.
 - `meep-inputs-and-modeling`: geometry/material/source/boundary modeling decisions.
 - `meep-simulation-workflows`: setup/run/monitor/termination/convergence workflows.
 - `meep-api-and-scripting`: Python/Scheme interface usage, symbol lookup, and binding behavior.

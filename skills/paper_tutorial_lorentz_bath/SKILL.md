@@ -1,12 +1,14 @@
 ---
 name: paper_tutorial_lorentz_bath
-description: Reproduce the manuscript's Lorentz vs Lorentz-Bath FDTD-Bath results (Fig. 1-4 geometry, 1D/2D spectra and dynamics, and MPI scaling) from packaged local assets, and adapt the same parameterized procedures to related condensed-phase polaritonic systems.
+description: Reproduce the manuscript's Lorentz vs Lorentz-Bath FDTD-Bath results (Fig. 1-4 geometry, 1D/2D spectra and dynamics, and MPI scaling) from packaged local assets using this modified Meep distribution (`pymeep-fdtdbath`), and adapt the same parameterized procedures to related condensed-phase polaritonic systems.
 ---
 
 Use this skill from repository root. Run simulations and postprocessing only inside `projects/YYYY-MM-DD-<scope>/` runtime folders.
 
+Repository note: all workflows here assume the modified Meep/FDTD-Bath build packaged as `pymeep-fdtdbath`.
+
 ## Core Simulation Strategy
-1. Install the modified Meep stack before any figure run using the packaged scripts in `assets/fdtd_bath/installation_scripts/`.
+1. Install the modified Meep stack before any figure run using Conda package `pymeep-fdtdbath` from `tel-research` + `conda-forge`.
 2. Stage `assets/fdtd_bath/` and `assets/scripts/` into a dated runtime folder under `projects/`; never run workloads inside `skills/paper_tutorial_lorentz_bath/`.
 3. Keep manuscript baseline constants unless a playbook explicitly changes them: `num_bath=100`, `d=0.99`, `k=0.01`, `bath_width=10*gamma`, `gamma=0.04`, `nu0=1.0 um^-1`, mirror `n=10`, mirror thickness `0.02 um`, slab/cavity thickness `1.0 um`.
 4. For each figure, execute the fixed sequence: simulation batch -> plotting script -> validation script.
@@ -23,12 +25,20 @@ cp -R skills/paper_tutorial_lorentz_bath/assets/fdtd_bath "$RUN_DIR/"
 cp -R skills/paper_tutorial_lorentz_bath/assets/scripts "$RUN_DIR/"
 ```
 
-2. Install the modified Meep stack (choose one environment script):
+2. Install the modified Meep stack (new env or existing env):
 ```bash
-cd "$RUN_DIR/fdtd_bath"
-bash installation_scripts/meep_install_CentOS9.sh
-# or
-bash installation_scripts/meep_install_hpc_anvil.sh
+# Option A: create a new environment
+conda create -n fdtdbath-run --override-channels \
+  -c tel-research -c conda-forge \
+  "pymeep-fdtdbath * mpi_mpich_*"
+conda activate fdtdbath-run
+
+# Option B: install into an existing environment
+conda install --override-channels \
+  -c tel-research -c conda-forge \
+  "pymeep-fdtdbath * mpi_mpich_*"
+
+python -c 'import meep as mp; print(mp.__version__); print(hasattr(mp, "BathLorentzianSusceptibility"))'
 ```
 
 3. Run direct figure workflows:

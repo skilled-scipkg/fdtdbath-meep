@@ -1,6 +1,6 @@
 ---
 name: meep-advanced-topics
-description: Use this skill for specialized low-frequency Meep topics that were consolidated from one-doc skills (special kz, symmetry, PML deep-dive, Yee lattice, units/nonlinearity, Scheme/Guile notes, theory math note, requirements, licensing, acknowledgements). Keep routing compact and docs-first.
+description: Use this skill for specialized low-frequency topics in this modified Meep repository (includes Lorentz-Bath/FDTD-Bath support for condensed-phase polaritons), consolidated from one-doc skills (special kz, symmetry, PML deep-dive, Yee lattice, units/nonlinearity, Scheme/Guile notes, theory math note, requirements, licensing, acknowledgements). Keep routing compact and docs-first.
 ---
 
 # meep: Advanced Topics

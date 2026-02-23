@@ -1,9 +1,11 @@
 ---
 name: meep-getting-started
-description: Use this skill for first-run onboarding, core Meep concepts, and minimal Python/Scheme simulations. Route users to build/install, modeling, workflow, API, or examples skills when requests go beyond quickstart scope.
+description: Use this skill for first-run onboarding, core concepts, and minimal Python/Scheme simulations in this modified Meep repository (includes Lorentz-Bath/FDTD-Bath support for condensed-phase polaritons). Route users to build/install, modeling, workflow, API, or examples skills when requests go beyond quickstart scope.
 ---
 
 # meep: Getting Started
+
+Repository note: this repository is a modified Meep distribution with Lorentz-Bath/FDTD-Bath extensions for condensed-phase polaritons.
 
 ## High-Signal Playbook
 ### Route conditions
@@ -22,7 +24,7 @@ description: Use this skill for first-run onboarding, core Meep concepts, and mi
 - Are they asking for a first runnable script or for interpretation of existing results?
 
 ### Canonical workflow
-1. Confirm installation sanity with the simplest runtime check (`python -c 'import meep'`) from `doc/docs/Installation.md`.
+1. Confirm installation sanity with a minimal runtime check (`python -c 'import meep as mp; print(mp.__version__)'`) and route package/setup issues to `meep-build-and-install`.
 2. Start from the straight-waveguide basics in Python or Scheme (`doc/docs/Python_Tutorials/Basics.md`, `doc/docs/Scheme_Tutorials/Basics.md`).
 3. Build a minimal model: `cell`, `geometry`, `sources`, `pml_layers`, `resolution`, then run.
 4. Validate that outputs are physically sensible (field propagation direction, PML absorption, no immediate blow-up).

@@ -1,6 +1,6 @@
 ---
 name: meep-examples-and-tutorials
-description: Use this skill to route users to the closest runnable Meep examples/tutorials (Python and Scheme) by problem type, with minimal adaptation steps and docs-first references before source escalation.
+description: Use this skill to route users to the closest runnable examples/tutorials (Python and Scheme) in this modified Meep repository (includes Lorentz-Bath/FDTD-Bath support for condensed-phase polaritons), with minimal adaptation steps and docs-first references before source escalation.
 ---
 
 # meep: Examples and Tutorials

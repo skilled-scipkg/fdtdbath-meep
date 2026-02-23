@@ -1,6 +1,6 @@
 ---
 name: meep-simulation-workflows
-description: Use this skill for end-to-end simulation execution flow (setup, run control, monitors, normalization, parallel run behavior, termination criteria, and output interpretation). Start with docs, escalate to source only for unresolved behavior.
+description: Use this skill for end-to-end simulation execution flow in this modified Meep repository (setup, run control, monitors, normalization, parallel run behavior, termination criteria, and output interpretation, including Lorentz-Bath/FDTD-Bath runs for condensed-phase polaritons). Start with docs, escalate to source only for unresolved behavior.
 ---
 
 # meep: Simulation Workflows

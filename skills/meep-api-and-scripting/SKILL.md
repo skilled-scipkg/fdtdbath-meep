@@ -1,6 +1,6 @@
 ---
 name: meep-api-and-scripting
-description: Use this skill for Python/Scheme interface usage, scripting patterns, cross-interface mapping, and API symbol lookup strategy. Start from docs and examples, then escalate to binding/source files only for unresolved behavior.
+description: Use this skill for Python/Scheme interface usage, scripting patterns, cross-interface mapping, and API symbol lookup strategy in this modified Meep repository (includes Lorentz-Bath/FDTD-Bath support for condensed-phase polaritons). Start from docs and examples, then escalate to binding/source files only for unresolved behavior.
 ---
 
 # meep: API and Scripting

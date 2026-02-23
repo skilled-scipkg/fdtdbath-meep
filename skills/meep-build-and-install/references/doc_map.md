@@ -3,8 +3,9 @@
 Use this map from `skills/meep-build-and-install/SKILL.md`.
 
 ## Primary install/build docs
-- `doc/docs/Installation.md` - recommended Conda paths and troubleshooting.
-- `doc/docs/Build_From_Source.md` - source-build flow and dependency expectations.
+- `skills/meep-build-and-install/SKILL.md` - canonical `pymeep-fdtdbath` Conda installation flow (`tel-research` + `conda-forge`) for this modified Meep package.
+- `doc/docs/Installation.md` - upstream Meep installation troubleshooting and environment sanity checks.
+- `doc/docs/Build_From_Source.md` - source-build fallback flow and dependency expectations.
 - `doc/docs/Parallel_Meep.md` - MPI launch patterns and scaling caveats.
 - `doc/docs/Download.md` - release artifact selection (`meep-X.Y.Z.tar.gz` vs source snapshots).
 - `doc/docs/FAQ.md` - common failure modes (convergence/runtime/import).

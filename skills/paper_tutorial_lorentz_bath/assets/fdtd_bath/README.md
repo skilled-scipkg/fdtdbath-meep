@@ -4,13 +4,32 @@ This Github repo stores the input and post-processing files for the publications
 
 ## Installation
 
-The FDTD-Bath approach is implemented on top of the open-source FDTD package [MEEP](https://meep.readthedocs.io/en/master/). However, at this moment, this approach has not been merged into to the main version of MEEP. Users need to install [our modified MEEP code](https://github.com/TaoELi/meep) from source: https://github.com/TaoELi/meep. The MEEP offical website contains the detailed discussion of [installing MEEP from source](https://meep.readthedocs.io/en/latest/Build_From_Source/).
+The FDTD-Bath approach is implemented on top of a modified MEEP codebase from the [TEL research group](https://www.taoeli.org/). This functionality has not been merged into upstream MEEP.
 
-Because it is very tedious to install the MEEP package from source, the following bash scripts are provided in [./installation_scripts/](./installation_scripts/) for smoothly installing the MEEP package in a few different Linux environments. 
+Install the packaged build from Conda channels (`tel-research` + `conda-forge`) with MPICH-enabled MPI:
 
-- [./installation_scripts/meep_install_CentOS9.sh](./installation_scripts/meep_install_CentOS9.sh): Tested on a clean CentOS9 system with **sudo** privileges. 
+Create a new Conda environment:
 
-- [./installation_scripts/meep_install_hpc_anvil.sh](./installation_scripts/meep_install_hpc_anvil.sh): Tested on the Anvil HPC system, which is available to U.S. researchers through the NSF ACCESS program; see https://allocations.access-ci.org/get-your-first-project. 
+```bash
+conda create -n fdtdbath-run --override-channels \
+  -c tel-research -c conda-forge \
+  "pymeep-fdtdbath * mpi_mpich_*"
+```
+
+Or install into an existing Conda environment:
+
+```bash
+conda install --override-channels \
+  -c tel-research -c conda-forge \
+  "pymeep-fdtdbath * mpi_mpich_*"
+```
+
+The package name is `pymeep-fdtdbath`; Python import remains `import meep as mp`.
+
+Legacy source-install helper scripts are retained in [./installation_scripts/](./installation_scripts/) for environments where this packaged installation cannot be used:
+
+- [./installation_scripts/meep_install_CentOS9.sh](./installation_scripts/meep_install_CentOS9.sh): tested on a clean CentOS9 system with **sudo** privileges.
+- [./installation_scripts/meep_install_hpc_anvil.sh](./installation_scripts/meep_install_hpc_anvil.sh): tested on the Anvil HPC system, available through the NSF ACCESS program (https://allocations.access-ci.org/get-your-first-project).
 
 ## Data for FDTD-Bath publications
 

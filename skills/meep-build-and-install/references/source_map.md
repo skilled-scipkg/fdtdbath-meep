@@ -3,7 +3,8 @@
 Use this map only after reading `skills/meep-build-and-install/references/doc_map.md`.
 
 ## Starter commands
-- `conda create -n mp -c conda-forge pymeep pymeep-extras && conda activate mp`
+- `conda create -n fdtdbath-run --override-channels -c tel-research -c conda-forge "pymeep-fdtdbath * mpi_mpich_*" && conda activate fdtdbath-run`
+- `conda install --override-channels -c tel-research -c conda-forge "pymeep-fdtdbath * mpi_mpich_*"`
 - `sh autogen.sh --enable-shared`
 - `./configure --with-mpi --with-openmp PYTHON=python3`
 - `make -j && make check`
@@ -11,7 +12,7 @@ Use this map only after reading `skills/meep-build-and-install/references/doc_ma
 
 ## Validation checkpoints
 - `configure` summary reflects intended features (`MPI`, `OpenMP`, `HDF5`, Python/Scheme interfaces).
-- `python -c 'import meep as mp'` succeeds in the target environment.
+- `python -c 'import meep as mp; print(mp.__version__); print(hasattr(mp, "BathLorentzianSusceptibility"))'` succeeds in the target environment.
 - At least one serial and one MPI example complete successfully.
 
 ## Function-level source entry points

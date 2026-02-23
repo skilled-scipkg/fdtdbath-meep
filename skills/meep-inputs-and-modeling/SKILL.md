@@ -1,6 +1,6 @@
 ---
 name: meep-inputs-and-modeling
-description: Use this skill for geometry/material/source/boundary modeling decisions in Meep (including dispersion, nonlinearity, symmetry, chunks, and coordinate choices). Keep guidance docs-first and escalate to source only when docs are insufficient.
+description: Use this skill for geometry/material/source/boundary modeling decisions in this modified Meep repository (including Lorentz-Bath/FDTD-Bath support for condensed-phase polaritons, plus dispersion, nonlinearity, symmetry, chunks, and coordinate choices). Keep guidance docs-first and escalate to source only when docs are insufficient.
 ---
 
 # meep: Inputs and Modeling
