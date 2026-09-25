@@ -638,6 +638,7 @@ struct mxl_socket_data {
   realnum *P[NUM_FIELD_COMPONENTS][2];
   std::vector<realnum> P_store[NUM_FIELD_COMPONENTS][2];
   std::vector<size_t> active_indices;
+  std::vector<unsigned char> comp_mask; // owned nonzero-sigma bits (x/r=1, y/p=2, z=4)
   std::vector<int> drive_cmps;
   std::vector<int> molecule_ids;
   std::vector<double> efields_au;
@@ -650,7 +651,8 @@ struct mxl_socket_data {
   }
 
   mxl_socket_data(const mxl_socket_data &other)
-      : ntot(other.ntot), active_indices(other.active_indices), drive_cmps(other.drive_cmps),
+      : ntot(other.ntot), active_indices(other.active_indices), comp_mask(other.comp_mask),
+        drive_cmps(other.drive_cmps),
         molecule_ids(other.molecule_ids), efields_au(other.efields_au),
         amps_au(other.amps_au), initialized(false), client() {
     FOR_COMPONENTS(c) DOCMP2 { P_store[c][cmp] = other.P_store[c][cmp]; }
@@ -1376,13 +1378,23 @@ void mxl_socket_susceptibility::init_internal_data(realnum *W[NUM_FIELD_COMPONEN
     const realnum *s = sigma[c][dc];
     if (!s || (!W[c][0] && !W[c][1])) continue;
     PLOOP_OVER_VOL_OWNED(gv, c, i) {
-      if (s[i] != 0.0) active[(size_t)i] = 1;
+      if (s[i] != 0.0) {
+        int axis = mxl_amp_axis(c); 
+        // 1 << axis (axis = 0,1,2 for xyz) is a bitmask to obtain 001, 010, 100 (1, 2, 4)
+        int component_bit = 1 << axis; 
+        active[(size_t)i] = active[(size_t)i] | component_bit;
+      }
+
     }
   }
 
   d->active_indices.clear();
+  d->comp_mask.clear();
   for (size_t i = 0; i < active.size(); ++i)
-    if (active[i]) d->active_indices.push_back(i);
+    if (active[i]) {
+      d->active_indices.push_back(i);
+      d->comp_mask.push_back(active[i]);
+    }
 
   d->drive_cmps.clear();
   d->drive_cmps.push_back(0);
@@ -1480,7 +1492,10 @@ void mxl_socket_susceptibility::update_P(realnum *W[NUM_FIELD_COMPONENTS][2],
       size_t idx = d->active_indices[isite];
       for (int axis = 0; axis < 3; ++axis) {
         component c = comps[axis];
-        d->efields_au[3 * imol + axis] = W[c][cmp] ? efield_factor * W[c][cmp][idx] : 0.0;
+        d->efields_au[3 * imol + axis] =
+            ((d->comp_mask[isite] & (1 << axis)) && W[c][cmp])
+                ? efield_factor * W[c][cmp][idx]
+                : 0.0;
       }
     }
   }
@@ -1514,7 +1529,7 @@ void mxl_socket_susceptibility::update_P(realnum *W[NUM_FIELD_COMPONENTS][2],
       for (size_t isite = 0; isite < nsites; ++isite) {
         size_t imol = icmp * nsites + isite;
         size_t idx = d->active_indices[isite];
-        if (s[idx] != 0.0)
+        if (d->comp_mask[isite] & (1 << axis))
           p[idx] += (realnum)(dt * pdot_scale * s[idx] * d->amps_au[3 * imol + axis]);
       }
     }
